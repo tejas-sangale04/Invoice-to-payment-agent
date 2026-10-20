@@ -1,8 +1,11 @@
+from unittest.mock import MagicMock
+
 import pytest
 from fastapi.testclient import TestClient
 
 from app.main import create_app
 from app.services import firebase
+from app.services.firestore import get_db
 
 # Fake ID tokens for unit tests: token string -> decoded claims.
 FAKE_TOKENS = {
@@ -23,7 +26,10 @@ def _fake_verify(token: str) -> dict:
 @pytest.fixture
 def client(monkeypatch: pytest.MonkeyPatch) -> TestClient:
     monkeypatch.setattr(firebase, "verify_id_token", _fake_verify)
-    return TestClient(create_app())
+    app = create_app()
+    # Unit tests never touch Firestore; anything needing a real database is an emulator test.
+    app.dependency_overrides[get_db] = MagicMock
+    return TestClient(app)
 
 
 def bearer(token: str) -> dict[str, str]:

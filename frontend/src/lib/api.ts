@@ -1,4 +1,16 @@
 import { auth } from '@/lib/firebase'
+import type {
+  AuditEntry,
+  BusinessRules,
+  GoodsReceipt,
+  Invoice,
+  InvoiceStatus,
+  LedgerEntry,
+  Page,
+  POStatus,
+  PurchaseOrder,
+  Supplier,
+} from '@/lib/types'
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000'
 
@@ -38,3 +50,70 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
 }
 
 export const getMe = () => apiFetch<Me>('/me')
+
+// ---- Endpoints ----
+
+function qs(params: Record<string, string | number | undefined | null>): string {
+  const s = new URLSearchParams()
+  for (const [k, v] of Object.entries(params)) if (v !== undefined && v !== null && v !== '') s.set(k, String(v))
+  const str = s.toString()
+  return str ? `?${str}` : ''
+}
+
+export const listSuppliers = (limit = 100) => apiFetch<Page<Supplier>>(`/suppliers${qs({ limit })}`)
+export const createSupplier = (body: { name: string; email: string; gstin?: string }) =>
+  apiFetch<Supplier>('/suppliers', { method: 'POST', body: JSON.stringify(body) })
+
+export const listPurchaseOrders = (params: { status?: POStatus; cursor?: string | null; limit?: number } = {}) =>
+  apiFetch<Page<PurchaseOrder>>(`/purchase-orders${qs({ limit: params.limit ?? 50, ...params })}`)
+export const getPurchaseOrder = (po: string) => apiFetch<PurchaseOrder>(`/purchase-orders/${encodeURIComponent(po)}`)
+export interface POItemInput {
+  name: string
+  qty: string
+  unit: string
+  unit_price_paise: number
+  tax_rate: string
+}
+export const createPurchaseOrder = (body: { supplier_id: string; items: POItemInput[] }) =>
+  apiFetch<PurchaseOrder>('/purchase-orders', { method: 'POST', body: JSON.stringify(body) })
+
+export const listGoodsReceipts = (poNumber?: string) =>
+  apiFetch<Page<GoodsReceipt>>(`/goods-receipts${qs({ po_number: poNumber, limit: 100 })}`)
+export const createGoodsReceipt = (body: {
+  po_number: string
+  received_on: string
+  notes: string
+  items: { line_id: string; qty_received: string }[]
+}) => apiFetch<GoodsReceipt>('/goods-receipts', { method: 'POST', body: JSON.stringify(body) })
+
+export const getBusinessRules = () => apiFetch<BusinessRules>('/business-rules')
+export const saveBusinessRules = (body: BusinessRules) =>
+  apiFetch<BusinessRules>('/business-rules', { method: 'PUT', body: JSON.stringify(body) })
+
+// ---- Invoice endpoints (Setup guide, Section 9). Screens only call these once FEATURES says they're live. ----
+
+export interface DashboardMetrics {
+  invoices_processed: number
+  decision_counts: Record<string, number>
+  money_saved_paise: number
+  avg_processing_seconds: number | null
+  avg_ai_cost_paise: number | null
+}
+
+export const listInvoices = (params: { status?: InvoiceStatus; cursor?: string | null } = {}) =>
+  apiFetch<Page<Invoice>>(`/invoices${qs({ limit: 50, ...params })}`)
+export const getInvoice = (id: string) => apiFetch<Invoice>(`/invoices/${encodeURIComponent(id)}`)
+export const getInvoiceFileUrl = (id: string) => apiFetch<{ url: string }>(`/invoices/${encodeURIComponent(id)}/file`)
+export const uploadInvoice = (file: File) => {
+  const body = new FormData()
+  body.append('file', file)
+  return apiFetch<Invoice>('/invoices', { method: 'POST', body })
+}
+export const approveInvoice = (id: string, comment: string) =>
+  apiFetch<Invoice>(`/invoices/${encodeURIComponent(id)}/approve`, { method: 'POST', body: JSON.stringify({ comment }) })
+export const rejectInvoice = (id: string, reason: string) =>
+  apiFetch<Invoice>(`/invoices/${encodeURIComponent(id)}/reject`, { method: 'POST', body: JSON.stringify({ reason }) })
+export const getAuditLog = (invoiceId: string) =>
+  apiFetch<Page<AuditEntry>>(`/audit-log${qs({ invoice_id: invoiceId })}`)
+export const listLedger = () => apiFetch<Page<LedgerEntry>>('/ledger?limit=100')
+export const getDashboardMetrics = () => apiFetch<DashboardMetrics>('/dashboard/metrics')

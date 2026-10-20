@@ -1,0 +1,21 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "purchase_orders",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "created_at", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "goods_receipts",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "po_number", "order": "ASCENDING" },
+        { "fieldPath": "created_at", "order": "DESCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

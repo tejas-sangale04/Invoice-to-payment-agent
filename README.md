@@ -9,7 +9,19 @@ The full specification and build plan is in [PROJECT_CONTEXT.md](PROJECT_CONTEXT
 | Phase | Scope | State |
 |---|---|---|
 | 1 | Setup: monorepo, FastAPI and React skeletons, Firebase Auth roles, emulators, CI, Dockerfiles | Done |
-| 2 to 10 | Master data, invoice intake, extraction, matching, approval, agents, dashboard, evaluation, deployment | Not started |
+| 2 | Master data: suppliers, purchase orders, deliveries (API, screens, tests), plus business rules | Done |
+| UI | Every screen from the setup guide, Section 10, with role-based navigation | Done |
+| 3 to 10 | Invoice intake, extraction, matching, approval, agents, dashboard, evaluation, deployment | Not started |
+
+Screens whose backend is not built yet (upload, invoices, approval queue, ledger, dashboard) show a notice naming the phase that switches them on and make no API calls. Each is turned on by one flag in `frontend/src/lib/features.ts`.
+
+## What works today
+
+- Admins add suppliers (duplicate names such as "Sharma Dairy" vs "Sharma Dairy Pvt Ltd" are rejected).
+- Staff create purchase orders with several lines, GST per line and a live total; IDs are sequential (PO-1, PO-2...).
+- Staff record full or partial deliveries. Received quantities add up per line, and a delivery that would take a line past what was ordered is refused.
+- Admins edit the business rules (price tolerance, auto-approve limit, minimum extraction confidence).
+- Money is stored as integer paise, quantities and tax rates as exact decimals.
 
 ## Layout
 
@@ -32,7 +44,7 @@ cd backend
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements-dev.txt
 cp .env.example .env
-python -m scripts.seed_emulator_users      # creates staff/manager/admin demo users
+python -m scripts.seed_emulator            # demo users for each role + demo suppliers
 uvicorn app.main:app --reload --port 8000
 
 # 3. Frontend (new terminal)

@@ -1,5 +1,6 @@
+import { useQueryClient } from '@tanstack/react-query'
 import { onIdTokenChanged, signOut as fbSignOut, type User } from 'firebase/auth'
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
 
 import type { Role } from '@/lib/api'
 import { auth } from '@/lib/firebase'
@@ -17,10 +18,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [role, setRole] = useState<Role | null>(null)
   const [loading, setLoading] = useState(true)
+  const queryClient = useQueryClient()
+  const lastUid = useRef<string | null>(null)
 
   useEffect(
     () =>
       onIdTokenChanged(auth, async (next) => {
+        // A different account (or none) must never see the previous user's cached data.
+        const uid = next?.uid ?? null
+        if (uid !== lastUid.current) queryClient.clear()
+        lastUid.current = uid
         setUser(next)
         if (next) {
           const { claims } = await next.getIdTokenResult()
@@ -30,7 +37,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
         setLoading(false)
       }),
-    [],
+    [queryClient],
   )
 
   return (
