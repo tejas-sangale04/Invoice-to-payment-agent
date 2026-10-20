@@ -20,6 +20,7 @@ from app.models.master_data import (
 )
 from app.pipeline.money import line_amounts
 from app.services.counters import next_id
+from app.services.pagination import paginate
 
 _LEGAL_SUFFIXES = {"pvt", "private", "ltd", "limited", "llp", "inc", "co", "company", "corp"}
 
@@ -34,24 +35,6 @@ def normalize_name(name: str) -> str:
 
 def _now() -> datetime:
     return datetime.now(UTC)
-
-
-def _paginate(
-    query: firestore.Query,
-    collection: firestore.CollectionReference,
-    limit: int,
-    cursor: str | None,
-) -> tuple[list[firestore.DocumentSnapshot], str | None]:
-    query = query.order_by("created_at", direction=firestore.Query.DESCENDING)
-    if cursor:
-        start = collection.document(cursor).get()
-        if not start.exists:
-            raise HTTPException(status_code=400, detail="Invalid cursor")
-        query = query.start_after(start)
-    docs = list(query.limit(limit + 1).stream())
-    has_more = len(docs) > limit
-    docs = docs[:limit]
-    return docs, (docs[-1].id if has_more else None)
 
 
 # ---------------------------------------------------------------- suppliers
@@ -86,7 +69,7 @@ def create_supplier(db: firestore.Client, data: SupplierCreate) -> Supplier:
 
 def list_suppliers(db: firestore.Client, limit: int, cursor: str | None) -> Page[Supplier]:
     col = db.collection("suppliers")
-    docs, next_cursor = _paginate(col, col, limit, cursor)
+    docs, next_cursor = paginate(col, col, limit, cursor)
     return Page(items=[Supplier(**d.to_dict()) for d in docs], next_cursor=next_cursor)
 
 
@@ -170,7 +153,7 @@ def list_purchase_orders(
 ) -> Page[PurchaseOrder]:
     col = db.collection("purchase_orders")
     query = col.where(filter=firestore.FieldFilter("status", "==", status.value)) if status else col
-    docs, next_cursor = _paginate(query, col, limit, cursor)
+    docs, next_cursor = paginate(query, col, limit, cursor)
     return Page(items=[_po_from_doc(d.to_dict()) for d in docs], next_cursor=next_cursor)
 
 
@@ -251,5 +234,5 @@ def list_goods_receipts(
     query = (
         col.where(filter=firestore.FieldFilter("po_number", "==", po_number)) if po_number else col
     )
-    docs, next_cursor = _paginate(query, col, limit, cursor)
+    docs, next_cursor = paginate(query, col, limit, cursor)
     return Page(items=[GoodsReceipt(**d.to_dict()) for d in docs], next_cursor=next_cursor)

@@ -11,9 +11,10 @@ The full specification and build plan is in [PROJECT_CONTEXT.md](PROJECT_CONTEXT
 | 1 | Setup: monorepo, FastAPI and React skeletons, Firebase Auth roles, emulators, CI, Dockerfiles | Done |
 | 2 | Master data: suppliers, purchase orders, deliveries (API, screens, tests), plus business rules | Done |
 | UI | Every screen from the setup guide, Section 10, with role-based navigation | Done |
-| 3 to 10 | Invoice intake, extraction, matching, approval, agents, dashboard, evaluation, deployment | Not started |
+| 3 | Invoice intake: upload, file storage, invoice record, background job, status machine, audit log | Done |
+| 4 to 10 | Extraction, matching, approval, agents, dashboard, evaluation, deployment | Not started |
 
-Screens whose backend is not built yet (upload, invoices, approval queue, ledger, dashboard) show a notice naming the phase that switches them on and make no API calls. Each is turned on by one flag in `frontend/src/lib/features.ts`.
+Until Phase 4 adds the Extraction Agent, every uploaded invoice is routed to `needs_review` with a clear reason, never guessed at. Screens whose backend is not built yet (approval queue, ledger, dashboard) show a notice naming the phase that switches them on and make no API calls. Each is turned on by one flag in `frontend/src/lib/features.ts`.
 
 ## What works today
 
@@ -22,6 +23,20 @@ Screens whose backend is not built yet (upload, invoices, approval queue, ledger
 - Staff record full or partial deliveries. Received quantities add up per line, and a delivery that would take a line past what was ordered is refused.
 - Admins edit the business rules (price tolerance, auto-approve limit, minimum extraction confidence).
 - Money is stored as integer paise, quantities and tax rates as exact decimals.
+- Staff upload invoice PDFs or images. The file type is checked from its bytes (not the browser's claim), the file is stored, the invoice is created as `received` and the upload returns at once. A background job then moves it through the pipeline; the screens update live.
+- Every status change and its audit entry are written in one Firestore transaction. Illegal moves (for example `matched` straight to `posted`) are refused, repeated moves are no-ops, and the pipeline resumes from the saved status after a restart.
+- Errors are retried; after the last attempt the invoice ends in `failed` for a person to check, never in silent failure. Managers can reprocess invoices that are on hold, need review or failed.
+- Invoice files are only reachable through short-lived signed links.
+
+## Background processing and file storage
+
+| Setting | Local default | Production |
+|---|---|---|
+| `STORAGE_MODE` | `local` (files in `backend/.data/uploads`) | `gcs` with `GCS_BUCKET`; links are V4 signed URLs signed through IAM, so the Cloud Run service account needs Service Account Token Creator on itself |
+| `TASKS_MODE` | `inline` (runs in the API process after the upload response, same retry logic) | `cloud_tasks` with `TASKS_QUEUE`, `TASKS_LOCATION`, `TASKS_SERVICE_ACCOUNT` and `API_BASE_URL` |
+| `MAX_PROCESSING_ATTEMPTS` | 5 | Must match the Cloud Tasks queue's max attempts |
+
+`POST /tasks/process-invoice` only accepts a Google-signed OIDC token for `TASKS_SERVICE_ACCOUNT` with the API URL as audience, and refuses every call in inline mode.
 
 ## Layout
 

@@ -22,7 +22,7 @@ function ApprovalCard({ inv }: { inv: Invoice }) {
   const [comment, setComment] = useState('')
   const ownUpload = inv.uploaded_by === user?.uid
   const done = (verb: string) => () => {
-    toast.success(`Invoice ${inv.invoice_no ?? inv.invoice_id} ${verb}`)
+    toast.success(`Invoice ${inv.extracted?.invoice_no ?? inv.invoice_id} ${verb}`)
     qc.invalidateQueries({ queryKey: ['invoices'] })
   }
   const approve = useMutation({ mutationFn: () => approveInvoice(inv.invoice_id, comment), onSuccess: done('approved') })
@@ -35,10 +35,10 @@ function ApprovalCard({ inv }: { inv: Invoice }) {
         <div>
           <CardTitle className="text-base">
             <Link to={`/invoices/${inv.invoice_id}`} className="hover:underline">
-              {inv.supplier_name} · {inv.invoice_no}
+              {inv.extracted?.supplier_name} · {inv.extracted?.invoice_no}
             </Link>
           </CardTitle>
-          <p className="text-sm text-muted-foreground">{inv.po_number ?? 'No PO number'}</p>
+          <p className="text-sm text-muted-foreground">{inv.extracted?.po_number ?? 'No PO number'}</p>
         </div>
         {inv.decision && <StatusBadge status={inv.decision} />}
       </CardHeader>
@@ -46,7 +46,7 @@ function ApprovalCard({ inv }: { inv: Invoice }) {
         <dl className="grid grid-cols-3 gap-4">
           <div>
             <dt className="text-xs text-muted-foreground">Billed</dt>
-            <dd className="text-lg font-semibold tabular-nums">{inv.total_paise == null ? '—' : formatPaise(inv.total_paise)}</dd>
+            <dd className="text-lg font-semibold tabular-nums">{inv.extracted?.total_paise == null ? '—' : formatPaise(inv.extracted?.total_paise)}</dd>
           </div>
           <div>
             <dt className="text-xs text-muted-foreground">Correct amount</dt>

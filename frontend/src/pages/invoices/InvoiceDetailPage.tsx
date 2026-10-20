@@ -1,5 +1,5 @@
-import { useQuery } from '@tanstack/react-query'
-import { Copy } from 'lucide-react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { AlertTriangle, Copy, RotateCcw } from 'lucide-react'
 import { useParams } from 'react-router-dom'
 import { toast } from 'sonner'
 
@@ -9,10 +9,18 @@ import { StatusBadge } from '@/components/StatusBadge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { getAuditLog, getInvoice, getInvoiceFileUrl } from '@/lib/api'
+import { useAuth } from '@/auth/AuthProvider'
+import { getAuditLog, getInvoice, getInvoiceFileUrl, reprocessInvoice } from '@/lib/api'
 import { FEATURES } from '@/lib/features'
 import { formatDate, formatPaise, formatQty } from '@/lib/format'
+import { hasRole } from '@/lib/roles'
+import type { InvoiceStatus } from '@/lib/types'
 import { cn } from '@/lib/utils'
+
+// While the agent is working the page polls; once it settles, it stops.
+const PROCESSING: InvoiceStatus[] = ['received', 'extracting', 'extracted', 'validated', 'matched']
+const REPROCESSABLE: InvoiceStatus[] = ['on_hold', 'needs_review', 'failed']
+const ATTENTION: InvoiceStatus[] = ['on_hold', 'needs_review', 'failed', 'blocked_duplicate', 'rejected']
 
 function Field({ label, value }: { label: string; value: string | null | undefined }) {
   return (
@@ -26,9 +34,25 @@ function Field({ label, value }: { label: string; value: string | null | undefin
 export function InvoiceDetailPage() {
   const { invoiceId = '' } = useParams()
   const live = FEATURES.invoices.live
-  const invoice = useQuery({ queryKey: ['invoice', invoiceId], queryFn: () => getInvoice(invoiceId), enabled: live, refetchInterval: 5000 })
-  const file = useQuery({ queryKey: ['invoice-file', invoiceId], queryFn: () => getInvoiceFileUrl(invoiceId), enabled: live })
-  const audit = useQuery({ queryKey: ['audit', invoiceId], queryFn: () => getAuditLog(invoiceId), enabled: live })
+  const { user, role } = useAuth()
+  const qc = useQueryClient()
+  const invoice = useQuery({
+    queryKey: ['invoice', invoiceId],
+    queryFn: () => getInvoice(invoiceId),
+    enabled: live,
+    refetchInterval: (q) => (q.state.data && PROCESSING.includes(q.state.data.status) ? 2000 : false),
+  })
+  // Signed links last 15 minutes; fetch a fresh one well before that.
+  const file = useQuery({ queryKey: ['invoice-file', invoiceId], queryFn: () => getInvoiceFileUrl(invoiceId), enabled: live, staleTime: 10 * 60_000, refetchInterval: 10 * 60_000 })
+  const audit = useQuery({ queryKey: ['audit', invoiceId, invoice.data?.updated_at], queryFn: () => getAuditLog(invoiceId), enabled: live && !!invoice.data })
+  const reprocess = useMutation({
+    mutationFn: () => reprocessInvoice(invoiceId),
+    onSuccess: (data) => {
+      toast.success('Sent back through the pipeline')
+      qc.setQueryData(['invoice', invoiceId], data)
+      qc.invalidateQueries({ queryKey: ['invoices'] })
+    },
+  })
 
   if (!live)
     return (
@@ -45,14 +69,48 @@ export function InvoiceDetailPage() {
   return (
     <>
       <PageHeader
-        title={inv.invoice_no ? `Invoice ${inv.invoice_no}` : `Invoice ${inv.invoice_id}`}
-        description={`${inv.supplier_name ?? 'Unknown supplier'} · uploaded ${formatDate(inv.created_at)}`}
-        actions={<StatusBadge status={inv.status} />}
+        title={inv.extracted?.invoice_no ? `Invoice ${inv.extracted.invoice_no}` : inv.invoice_id}
+        description={`${inv.extracted?.supplier_name ?? inv.file_name} · uploaded ${formatDate(inv.created_at)}`}
+        actions={
+          <div className="flex items-center gap-2">
+            <StatusBadge status={inv.status} />
+            {hasRole(role, 'manager') && REPROCESSABLE.includes(inv.status) && (
+              <Button size="sm" variant="outline" disabled={reprocess.isPending} onClick={() => reprocess.mutate()}>
+                <RotateCcw /> Reprocess
+              </Button>
+            )}
+          </div>
+        }
       />
+      {inv.status_reason && (
+        <div
+          className={cn(
+            'mb-6 flex items-start gap-3 rounded-md border p-4 text-sm',
+            ATTENTION.includes(inv.status) ? 'border-warning/40 bg-warning/10' : 'bg-background',
+          )}
+        >
+          {ATTENTION.includes(inv.status) && <AlertTriangle className="mt-0.5 size-4 shrink-0 text-amber-700" />}
+          <p>{inv.status_reason}</p>
+        </div>
+      )}
+      {PROCESSING.includes(inv.status) && (
+        <div className="mb-6">
+          <LoadingState label="The agent is working on this invoice…" />
+        </div>
+      )}
+      {reprocess.isError && (
+        <div className="mb-6">
+          <ErrorState error={reprocess.error} />
+        </div>
+      )}
       <div className="grid gap-6 lg:grid-cols-2">
         <Card className="min-h-[32rem] overflow-hidden py-0">
           {file.data ? (
-            <iframe title="Invoice file" src={file.data.url} className="h-full min-h-[32rem] w-full" />
+            file.data.content_type.startsWith('image/') ? (
+              <img src={file.data.url} alt={`Invoice ${inv.file_name}`} className="w-full object-contain" />
+            ) : (
+              <iframe title="Invoice file" src={file.data.url} className="h-full min-h-[32rem] w-full" />
+            )
           ) : file.isError ? (
             <CardContent className="py-6">
               <ErrorState error={file.error} />
@@ -68,12 +126,14 @@ export function InvoiceDetailPage() {
               <CardTitle className="text-base">Extracted details</CardTitle>
             </CardHeader>
             <CardContent>
+              {!inv.extracted && <p className="mb-4 text-sm text-muted-foreground">Not read yet.</p>}
               <dl className="grid grid-cols-2 gap-4 text-sm">
-                <Field label="Supplier" value={inv.supplier_name} />
-                <Field label="Invoice number" value={inv.invoice_no} />
-                <Field label="Invoice date" value={inv.invoice_date && formatDate(inv.invoice_date)} />
-                <Field label="PO number" value={inv.po_number} />
-                <Field label="Total" value={inv.total_paise == null ? null : formatPaise(inv.total_paise)} />
+                <Field label="File" value={`${inv.file_name} (${Math.ceil(inv.file_size / 1024)} KB)`} />
+                <Field label="Supplier" value={inv.extracted?.supplier_name} />
+                <Field label="Invoice number" value={inv.extracted?.invoice_no} />
+                <Field label="Invoice date" value={inv.extracted?.invoice_date && formatDate(inv.extracted?.invoice_date)} />
+                <Field label="PO number" value={inv.extracted?.po_number} />
+                <Field label="Total" value={inv.extracted?.total_paise == null ? null : formatPaise(inv.extracted?.total_paise)} />
               </dl>
             </CardContent>
           </Card>
@@ -159,11 +219,11 @@ export function InvoiceDetailPage() {
                 {audit.data?.items.map((a, i) => (
                   <li key={i}>
                     <p className="font-medium">
-                      {a.action}
+                      {a.action.charAt(0).toUpperCase() + a.action.slice(1).replace(/_/g, " ")}
                       {a.to_status && <span className="font-normal text-muted-foreground"> → {a.to_status.replace(/_/g, ' ')}</span>}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {a.actor} · {new Date(a.timestamp).toLocaleString('en-IN')}
+                      {a.actor === user?.uid ? 'You' : a.actor === 'agent' ? 'Agent' : a.actor} · {new Date(a.timestamp).toLocaleString('en-IN')}
                     </p>
                     {a.details && <p className="text-muted-foreground">{a.details}</p>}
                   </li>

@@ -9,6 +9,7 @@ from fastapi.testclient import TestClient
 from app.main import create_app
 from app.services import firebase
 from tests.conftest import _fake_verify, bearer
+from tests.emulator_utils import clear_firestore
 
 pytestmark = [
     pytest.mark.emulator,
@@ -22,13 +23,7 @@ STAFF, ADMIN = bearer("staff-token"), bearer("admin-token")
 
 @pytest.fixture
 def api(monkeypatch: pytest.MonkeyPatch) -> TestClient:
-    from app.core.config import get_settings
-
-    project = get_settings().google_cloud_project
-    httpx.delete(
-        f"http://{os.environ['FIRESTORE_EMULATOR_HOST']}/emulator/v1/projects/{project}"
-        "/databases/(default)/documents"
-    ).raise_for_status()
+    clear_firestore()
     monkeypatch.setattr(firebase, "verify_id_token", _fake_verify)
     return TestClient(create_app())
 

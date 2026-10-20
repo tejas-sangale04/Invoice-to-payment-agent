@@ -1,4 +1,4 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { FileUp, X } from 'lucide-react'
 import { useRef, useState, type DragEvent } from 'react'
 import { Link } from 'react-router-dom'
@@ -9,12 +9,41 @@ import { ErrorState, NotLiveNotice } from '@/components/States'
 import { StatusBadge } from '@/components/StatusBadge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { uploadInvoice } from '@/lib/api'
+import { getInvoice, uploadInvoice } from '@/lib/api'
 import { FEATURES } from '@/lib/features'
+import type { Invoice, InvoiceStatus } from '@/lib/types'
 import { cn } from '@/lib/utils'
 
 const ACCEPTED = ['application/pdf', 'image/png', 'image/jpeg']
 const MAX_BYTES = 10 * 1024 * 1024
+
+const PROCESSING: InvoiceStatus[] = ['received', 'extracting', 'extracted', 'validated', 'matched']
+
+/** Shows the uploaded invoice's status, polling until the agent is done with it. */
+function UploadedStatus({ uploaded }: { uploaded: Invoice }) {
+  const inv = useQuery({
+    queryKey: ['invoice', uploaded.invoice_id],
+    queryFn: () => getInvoice(uploaded.invoice_id),
+    initialData: uploaded,
+    refetchInterval: (q) => (q.state.data && PROCESSING.includes(q.state.data.status) ? 1500 : false),
+  }).data
+  return (
+    <div className="grid gap-1 rounded-md border p-3 text-sm">
+      <div className="flex items-center justify-between gap-3">
+        <span>
+          <span className="font-medium">{inv.invoice_id}</span> · {inv.file_name}
+        </span>
+        <div className="flex items-center gap-3">
+          <StatusBadge status={inv.status} />
+          <Link to={`/invoices/${inv.invoice_id}`} className="underline">
+            View
+          </Link>
+        </div>
+      </div>
+      {inv.status_reason && <p className="text-muted-foreground">{inv.status_reason}</p>}
+    </div>
+  )
+}
 
 export function UploadInvoicePage() {
   const live = FEATURES.invoices.live
@@ -95,17 +124,7 @@ export function UploadInvoicePage() {
           )}
           {fileError && <ErrorState error={new Error(fileError)} />}
           {mutation.isError && <ErrorState error={mutation.error} />}
-          {mutation.data && (
-            <div className="flex items-center justify-between gap-3 rounded-md border p-3 text-sm">
-              <span>Uploaded as {mutation.data.invoice_id}</span>
-              <div className="flex items-center gap-3">
-                <StatusBadge status={mutation.data.status} />
-                <Link to={`/invoices/${mutation.data.invoice_id}`} className="underline">
-                  View
-                </Link>
-              </div>
-            </div>
-          )}
+          {mutation.data && <UploadedStatus key={mutation.data.invoice_id} uploaded={mutation.data} />}
         </CardContent>
       </Card>
     </>

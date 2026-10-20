@@ -17,3 +17,6 @@ dist/
 
 # Firebase emulator logs
 *-debug.log
+
+# Local invoice files (dev storage)
+.data/

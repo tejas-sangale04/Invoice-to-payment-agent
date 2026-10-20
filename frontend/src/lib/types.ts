@@ -56,7 +56,7 @@ export interface BusinessRules {
   min_field_confidence: string
 }
 
-// ---- Invoices (API arrives in Phase 3; shapes follow the setup guide, Section 5) ----
+// ---- Invoices (setup guide, Section 5) ----
 
 export type InvoiceStatus =
   | 'received'
@@ -86,18 +86,29 @@ export interface MatchLine {
   issue: string | null
 }
 
-export interface Invoice {
-  invoice_id: string
-  status: InvoiceStatus
+export interface Extracted {
   supplier_name: string | null
   invoice_no: string | null
   invoice_date: string | null
   po_number: string | null
+  items: { name: string; qty: string; unit: string | null; unit_price_paise: number; tax_rate: string }[]
+  subtotal_paise: number | null
+  cgst_paise: number
+  sgst_paise: number
+  igst_paise: number
   total_paise: number | null
-  decision: Decision | null
-  decision_reason: string | null
-  explanation: string | null
-  supplier_email_draft: string | null
+  field_confidence: Record<string, number>
+}
+
+export interface Invoice {
+  invoice_id: string
+  status: InvoiceStatus
+  status_reason: string | null
+  file_name: string
+  content_type: string
+  file_size: number
+  file_hash: string
+  extracted: Extracted | null
   match_result: {
     matched_po: string | null
     per_line: MatchLine[]
@@ -105,8 +116,16 @@ export interface Invoice {
     correct_amount_paise: number
     difference_paise: number
   } | null
+  decision: Decision | null
+  decision_reason: string | null
+  explanation: string | null
+  supplier_email_draft: string | null
   uploaded_by: string
+  approved_by: string | null
+  processing_attempts: number
   created_at: string
+  updated_at: string
+  status_times: Record<string, string>
 }
 
 export interface LedgerEntry {
@@ -120,6 +139,7 @@ export interface LedgerEntry {
 }
 
 export interface AuditEntry {
+  invoice_id: string
   action: string
   actor: string
   from_status: string | null

@@ -103,7 +103,8 @@ export interface DashboardMetrics {
 export const listInvoices = (params: { status?: InvoiceStatus; cursor?: string | null } = {}) =>
   apiFetch<Page<Invoice>>(`/invoices${qs({ limit: 50, ...params })}`)
 export const getInvoice = (id: string) => apiFetch<Invoice>(`/invoices/${encodeURIComponent(id)}`)
-export const getInvoiceFileUrl = (id: string) => apiFetch<{ url: string }>(`/invoices/${encodeURIComponent(id)}/file`)
+export const getInvoiceFileUrl = (id: string) =>
+  apiFetch<{ url: string; content_type: string; expires_in_seconds: number }>(`/invoices/${encodeURIComponent(id)}/file`)
 export const uploadInvoice = (file: File) => {
   const body = new FormData()
   body.append('file', file)
@@ -113,6 +114,8 @@ export const approveInvoice = (id: string, comment: string) =>
   apiFetch<Invoice>(`/invoices/${encodeURIComponent(id)}/approve`, { method: 'POST', body: JSON.stringify({ comment }) })
 export const rejectInvoice = (id: string, reason: string) =>
   apiFetch<Invoice>(`/invoices/${encodeURIComponent(id)}/reject`, { method: 'POST', body: JSON.stringify({ reason }) })
+export const reprocessInvoice = (id: string) =>
+  apiFetch<Invoice>(`/invoices/${encodeURIComponent(id)}/reprocess`, { method: 'POST' })
 export const getAuditLog = (invoiceId: string) =>
   apiFetch<Page<AuditEntry>>(`/audit-log${qs({ invoice_id: invoiceId })}`)
 export const listLedger = () => apiFetch<Page<LedgerEntry>>('/ledger?limit=100')

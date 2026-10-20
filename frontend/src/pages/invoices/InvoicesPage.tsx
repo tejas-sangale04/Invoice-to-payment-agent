@@ -41,9 +41,9 @@ export function InvoicesPage() {
   // Supplier and date filters run on the loaded rows.
   const rows = (invoices.data?.pages.flatMap((p) => p.items) ?? []).filter(
     (inv) =>
-      (!supplier || (inv.supplier_name ?? '').toLowerCase().includes(supplier.toLowerCase())) &&
-      (!from || (inv.invoice_date ?? inv.created_at) >= from) &&
-      (!to || (inv.invoice_date ?? inv.created_at).slice(0, 10) <= to),
+      (!supplier || (inv.extracted?.supplier_name ?? inv.file_name).toLowerCase().includes(supplier.toLowerCase())) &&
+      (!from || (inv.extracted?.invoice_date ?? inv.created_at) >= from) &&
+      (!to || (inv.extracted?.invoice_date ?? inv.created_at).slice(0, 10) <= to),
   )
 
   return (
@@ -94,10 +94,13 @@ export function InvoicesPage() {
               <TableBody>
                 {rows.map((inv) => (
                   <TableRow key={inv.invoice_id} className="cursor-pointer" onClick={() => navigate(`/invoices/${inv.invoice_id}`)}>
-                    <TableCell className="font-medium">{inv.invoice_no ?? inv.invoice_id}</TableCell>
-                    <TableCell>{inv.supplier_name ?? '—'}</TableCell>
-                    <TableCell>{inv.po_number ?? '—'}</TableCell>
-                    <TableCell className="text-right tabular-nums">{inv.total_paise == null ? '—' : formatPaise(inv.total_paise)}</TableCell>
+                    <TableCell className="font-medium">
+                      {inv.extracted?.invoice_no ?? inv.invoice_id}
+                      <p className="max-w-48 truncate text-xs font-normal text-muted-foreground">{inv.file_name}</p>
+                    </TableCell>
+                    <TableCell>{inv.extracted?.supplier_name ?? '—'}</TableCell>
+                    <TableCell>{inv.extracted?.po_number ?? '—'}</TableCell>
+                    <TableCell className="text-right tabular-nums">{inv.extracted?.total_paise == null ? '—' : formatPaise(inv.extracted?.total_paise)}</TableCell>
                     <TableCell>
                       <StatusBadge status={inv.status} />
                     </TableCell>

@@ -28,7 +28,7 @@ def client(monkeypatch: pytest.MonkeyPatch) -> TestClient:
     monkeypatch.setattr(firebase, "verify_id_token", _fake_verify)
     app = create_app()
     # Unit tests never touch Firestore; anything needing a real database is an emulator test.
-    app.dependency_overrides[get_db] = MagicMock
+    app.dependency_overrides[get_db] = lambda: MagicMock()
     return TestClient(app)
 
 
