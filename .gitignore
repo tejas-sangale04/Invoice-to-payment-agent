@@ -3,6 +3,8 @@
 .env.*
 !.env.example
 service-account*.json
+credentials/
+*-key.json
 
 # Python
 __pycache__/

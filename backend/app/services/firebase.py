@@ -12,7 +12,7 @@ def init_firebase() -> firebase_admin.App:
     """
     if firebase_admin._apps:
         return firebase_admin.get_app()
-    return firebase_admin.initialize_app(options={"projectId": get_settings().google_cloud_project})
+    return firebase_admin.initialize_app(options={"projectId": get_settings().firebase_project})
 
 
 def verify_id_token(token: str) -> dict:

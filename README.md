@@ -75,6 +75,8 @@ cp .env.example .env.local
 npm run dev                                # http://localhost:5173
 ```
 
+To try the Extraction Agent with real Gemini using your own Google Cloud service account, follow [docs/testing-with-gemini.md](docs/testing-with-gemini.md).
+
 Demo users (emulator only), all with password `password123`: `staff@invoiceflow.test`, `manager@invoiceflow.test`, `admin@invoiceflow.test`.
 
 ## Roles and auth

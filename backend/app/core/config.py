@@ -17,6 +17,9 @@ class Settings(BaseSettings):
 
     app_name: str = "InvoiceFlow API"
     google_cloud_project: str = "demo-invoiceflow"
+    # Firebase Auth and Firestore project. Empty means google_cloud_project. Set it locally to
+    # keep the emulators on demo-invoiceflow while Gemini runs in your real Google Cloud project.
+    firebase_project_id: str = ""
     firestore_database: str = "(default)"
     cors_origins: list[str] = ["http://localhost:5173"]
     log_level: str = "INFO"
@@ -48,6 +51,10 @@ class Settings(BaseSettings):
     extractor: Literal["gemini", "disabled"] = "gemini"
     gemini_model: str = "gemini-2.5-flash"
     gemini_timeout_seconds: float = 60
+
+    @property
+    def firebase_project(self) -> str:
+        return self.firebase_project_id or self.google_cloud_project
 
 
 @lru_cache
