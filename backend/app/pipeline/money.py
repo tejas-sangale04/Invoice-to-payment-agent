@@ -12,3 +12,13 @@ def line_amounts(qty: Decimal, unit_price_paise: int, tax_rate: Decimal) -> tupl
     """Return (taxable line total, tax) in paise for one line. `tax_rate` is a percent, e.g. 18."""
     taxable = qty * unit_price_paise
     return to_paise(taxable), to_paise(taxable * tax_rate / 100)
+
+
+def rupees(paise: int) -> str:
+    """Rs 3,000.00 style, for messages shown to people."""
+    return f"Rs {Decimal(paise) / 100:,.2f}"
+
+
+def qty_text(qty: Decimal) -> str:
+    """50.000 -> 50, 2.50 -> 2.5"""
+    return f"{qty.normalize():f}"

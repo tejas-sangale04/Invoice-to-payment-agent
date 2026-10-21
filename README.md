@@ -13,9 +13,10 @@ The full specification and build plan is in [PROJECT_CONTEXT.md](PROJECT_CONTEXT
 | UI | Every screen from the setup guide, Section 10, with role-based navigation | Done |
 | 3 | Invoice intake: upload, file storage, invoice record, background job, status machine, audit log | Done |
 | 4 | Extraction: ADK Extraction Agent on Gemini, strict schema, code validation with one corrective retry | Done |
-| 5 to 10 | Matching, approval, agents, dashboard, evaluation, deployment | Not started |
+| 5 | Matching and decisions: duplicate check, supplier and PO lookup, 3-way match with partial deliveries and GST, decision rules | Done |
+| 6 to 10 | Approval and posting, agents, dashboard, evaluation, deployment | Not started |
 
-Until Phase 5 adds the 3-way match, invoices that read and check out are routed to `needs_review` with a clear reason, never approved. Screens whose backend is not built yet (approval queue, ledger, dashboard) show a notice naming the phase that switches them on and make no API calls. Each is turned on by one flag in `frontend/src/lib/features.ts`.
+Invoices that pass every check end in `auto_approved`; posting them to the ledger comes in Phase 6. Screens whose backend is not built yet (approval queue, ledger, dashboard) show a notice naming the phase that switches them on and make no API calls. Each is turned on by one flag in `frontend/src/lib/features.ts`.
 
 ## What works today
 
@@ -31,6 +32,10 @@ Until Phase 5 adds the 3-way match, invoices that read and check out are routed 
 - The Extraction Agent (Google ADK, Gemini 2.5 Flash on Vertex AI, temperature 0) reads each invoice into a strict schema, copying values as printed with a confidence per field. It never calculates. Output that doesn't match the schema is never used.
 - Code then converts amounts to paise and checks them: required fields, quantity x price = line amount, line amounts = subtotal, CGST = SGST or IGST alone, GST = taxable value x rate, subtotal + GST = total (each within Rs 1), and every field's confidence against the admin's minimum. If anything fails, the problems are sent back to Gemini once; if the second reading still fails, the invoice goes to a person with the reasons listed. Gemini timeouts and errors are retried by the background task.
 - Tokens, calls and latency are recorded on each invoice for the Phase 8 dashboard.
+- Duplicates are blocked: the same file is caught before any model call, and the same supplier + invoice number (ignoring spaces and punctuation) after reading. A rejected invoice doesn't block a corrected copy. The same supplier and total within 7 days under a new number is flagged for a manager.
+- The supplier is found by GSTIN, then by name ("Sharma Dairy Pvt. Ltd." = "Sharma Dairy"). An unknown supplier, a GSTIN that belongs to someone else, or a PO for another supplier goes to review.
+- The PO number is read loosely ("po-1", "P.O. No. 001" and "1" are all PO-1). Each billed line is paired with its PO line by name ("Milk" = "Full cream milk") and compared per line: billed quantity against received minus already billed (several deliveries add up; invoices approved but not yet posted count as billed, so two invoices can't bill the same delivery), price against the PO price, and GST rate against the PO rate. Code works out the correct amount and the difference.
+- Code then decides, first rule wins: duplicate → block; can't match supplier, PO, a line or a unit → needs review; billed more than received → hold; price over the tolerance or GST rate differs → hold; price over but within tolerance → manager approval; total over the auto-approve limit → manager approval; possible duplicate → manager approval; otherwise auto-approve. Only overcharges count: a lower price is paid as billed. Every rule has unit tests.
 
 ## Background processing and file storage
 

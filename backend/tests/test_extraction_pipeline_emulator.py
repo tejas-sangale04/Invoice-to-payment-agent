@@ -66,7 +66,8 @@ def test_valid_reading_is_saved_in_paise_and_validated(api, monkeypatch) -> None
         "processing_started",
         "extracted",
         "validated",
-        "matching_unavailable",
+        "matched",
+        "decided_needs_review",
     ]
     e = inv["extracted"]
     assert (e["supplier_name"], e["invoice_no"], e["po_number"]) == (
@@ -95,8 +96,9 @@ def test_valid_reading_is_saved_in_paise_and_validated(api, monkeypatch) -> None
         "output_tokens": 200,
         "latency_ms": 1500,
     }
-    # Phase 5 isn't here yet, so a person takes over; never auto-approved.
+    # No supplier or PO exists in this test, so a person takes over; never auto-approved.
     assert inv["status"] == "needs_review"
+    assert inv["decision_rule"] == "no_matching_po"
 
 
 def test_failed_checks_are_fed_back_once_and_the_retry_can_fix_them(api, monkeypatch) -> None:

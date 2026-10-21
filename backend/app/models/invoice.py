@@ -57,23 +57,58 @@ class Extracted(BaseModel):
     field_confidence: dict[str, float] = {}
 
 
+class MatchIssueKind(StrEnum):
+    """What went wrong, from code. The decision step maps each kind to a rule (Section 8)."""
+
+    duplicate = "duplicate"  # same file, or same supplier + invoice number
+    supplier = "supplier"  # supplier not in the system, or not the PO's supplier
+    no_po = "no_po"  # no PO number, unknown PO or closed PO
+    unmatched_line = "unmatched_line"  # a billed line the PO doesn't have
+    unit = "unit"  # billed in a different unit, so quantities can't be compared
+    quantity = "quantity"  # billed more than received and not yet billed
+    price_over_tolerance = "price_over_tolerance"
+    price_within_tolerance = "price_within_tolerance"
+    gst_rate = "gst_rate"  # line GST rate differs from the PO
+    possible_duplicate = "possible_duplicate"  # same supplier and total within 7 days
+
+
+class MatchIssue(BaseModel):
+    kind: MatchIssueKind
+    message: str
+    line: int | None = None  # 1-based invoice line, when the issue is about one line
+
+
 class MatchLine(BaseModel):
+    """One invoice line compared with its PO line and what has been received."""
+
+    line: int
     name: str
+    po_line_id: str | None = None
+    po_item_name: str | None = None
+    unit: str | None = None
     billed_qty: Decimal
-    available_qty: Decimal
+    received_qty: Decimal = Decimal("0")
+    already_billed_qty: Decimal = Decimal("0")
+    available_qty: Decimal = Decimal("0")  # received minus already billed
     billed_unit_price_paise: int
-    po_unit_price_paise: int
+    po_unit_price_paise: int | None = None
+    billed_tax_rate: Decimal = Decimal("0")
+    po_tax_rate: Decimal | None = None
+    billed_amount_paise: int = 0  # billed qty x billed price, before tax
+    correct_amount_paise: int = 0  # payable qty x payable price, before tax
     issue: str | None = None
 
 
 class MatchResult(BaseModel):
-    """3-way match outcome (filled in from Phase 5)."""
+    """3-way match outcome. Everything here is computed by code, never by the model."""
 
     matched_po: str | None = None
+    supplier_id: str | None = None
+    matched_without_po_number: bool = False
     per_line: list[MatchLine] = []
-    issues: list[str] = []
-    correct_amount_paise: int = 0
-    difference_paise: int = 0
+    issues: list[MatchIssue] = []
+    correct_amount_paise: int = 0  # what we should pay, including GST at PO rates
+    difference_paise: int = 0  # invoice total minus the correct amount
 
 
 class AiUsage(BaseModel):
@@ -99,6 +134,7 @@ class Invoice(BaseModel):
     ai_usage: AiUsage | None = None
     decision: Decision | None = None
     decision_reason: str | None = None
+    decision_rule: str | None = None
     explanation: str | None = None
     supplier_email_draft: str | None = None
     uploaded_by: str

@@ -77,13 +77,51 @@ export type InvoiceStatus =
 
 export type Decision = 'auto_approve' | 'manager_approval' | 'hold' | 'block' | 'needs_review'
 
+export type MatchIssueKind =
+  | 'duplicate'
+  | 'supplier'
+  | 'no_po'
+  | 'unmatched_line'
+  | 'unit'
+  | 'quantity'
+  | 'price_over_tolerance'
+  | 'price_within_tolerance'
+  | 'gst_rate'
+  | 'possible_duplicate'
+
+export interface MatchIssue {
+  kind: MatchIssueKind
+  message: string
+  line: number | null
+}
+
 export interface MatchLine {
+  line: number
   name: string
+  po_line_id: string | null
+  po_item_name: string | null
+  unit: string | null
   billed_qty: string
+  received_qty: string
+  already_billed_qty: string
   available_qty: string
   billed_unit_price_paise: number
-  po_unit_price_paise: number
+  po_unit_price_paise: number | null
+  billed_tax_rate: string
+  po_tax_rate: string | null
+  billed_amount_paise: number
+  correct_amount_paise: number
   issue: string | null
+}
+
+export interface MatchResult {
+  matched_po: string | null
+  supplier_id: string | null
+  matched_without_po_number: boolean
+  per_line: MatchLine[]
+  issues: MatchIssue[]
+  correct_amount_paise: number
+  difference_paise: number
 }
 
 export interface Extracted {
@@ -117,17 +155,12 @@ export interface Invoice {
   file_size: number
   file_hash: string
   extracted: Extracted | null
-  match_result: {
-    matched_po: string | null
-    per_line: MatchLine[]
-    issues: string[]
-    correct_amount_paise: number
-    difference_paise: number
-  } | null
+  match_result: MatchResult | null
   validation_issues: string[]
   ai_usage: { calls: number; input_tokens: number; output_tokens: number; latency_ms: number } | null
   decision: Decision | null
   decision_reason: string | null
+  decision_rule: string | null
   explanation: string | null
   supplier_email_draft: string | null
   uploaded_by: string

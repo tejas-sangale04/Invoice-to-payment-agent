@@ -10,7 +10,7 @@ from decimal import Decimal, InvalidOperation
 
 from app.agents.schemas import LlmInvoice
 from app.models.invoice import Extracted, ExtractedItem
-from app.pipeline.money import to_paise
+from app.pipeline.money import rupees, to_paise
 
 TOLERANCE_PAISE = 100  # +/- Rs 1 for rounding on printed invoices
 
@@ -35,10 +35,6 @@ def _decimal(raw: str | None, field: str, issues: list[str]) -> Decimal | None:
 def _paise(raw: str | None, field: str, issues: list[str]) -> int | None:
     value = _decimal(raw, field, issues)
     return None if value is None else to_paise(value * 100)
-
-
-def _rupees(paise: int) -> str:
-    return f"Rs {Decimal(paise) / 100:,.2f}"
 
 
 def to_extracted(raw: LlmInvoice) -> tuple[Extracted, list[str]]:
@@ -112,8 +108,8 @@ def check(extracted: Extracted, min_confidence: Decimal) -> list[str]:
         line_total = to_paise(line_value)
         if item.amount_paise is not None and abs(line_total - item.amount_paise) > TOLERANCE_PAISE:
             issues.append(
-                f"Line {i} ({item.name}): {item.qty} x {_rupees(item.unit_price_paise)} = "
-                f"{_rupees(line_total)}, but the line amount reads {_rupees(item.amount_paise)}"
+                f"Line {i} ({item.name}): {item.qty} x {rupees(item.unit_price_paise)} = "
+                f"{rupees(line_total)}, but the line amount reads {rupees(item.amount_paise)}"
             )
         taxable_sum += item.amount_paise if item.amount_paise is not None else line_total
         expected_tax += line_value * item.tax_rate / 100
@@ -124,8 +120,8 @@ def check(extracted: Extracted, min_confidence: Decimal) -> list[str]:
         and abs(taxable_sum - e.subtotal_paise) > TOLERANCE_PAISE
     ):
         issues.append(
-            f"Line amounts add up to {_rupees(taxable_sum)}, but the subtotal reads "
-            f"{_rupees(e.subtotal_paise)}"
+            f"Line amounts add up to {rupees(taxable_sum)}, but the subtotal reads "
+            f"{rupees(e.subtotal_paise)}"
         )
     subtotal = e.subtotal_paise if e.subtotal_paise is not None else taxable_sum
 
@@ -136,17 +132,17 @@ def check(extracted: Extracted, min_confidence: Decimal) -> list[str]:
         )
     if abs(e.cgst_paise - e.sgst_paise) > TOLERANCE_PAISE:
         issues.append(
-            f"CGST ({_rupees(e.cgst_paise)}) and SGST ({_rupees(e.sgst_paise)}) should be equal"
+            f"CGST ({rupees(e.cgst_paise)}) and SGST ({rupees(e.sgst_paise)}) should be equal"
         )
     tax = e.cgst_paise + e.sgst_paise + e.igst_paise
     expected = to_paise(expected_tax)
     if e.items and abs(tax - expected) > TOLERANCE_PAISE:
-        issues.append(f"GST charged is {_rupees(tax)}, but the line rates give {_rupees(expected)}")
+        issues.append(f"GST charged is {rupees(tax)}, but the line rates give {rupees(expected)}")
 
     if e.total_paise is not None and abs(subtotal + tax - e.total_paise) > TOLERANCE_PAISE:
         issues.append(
-            f"Subtotal {_rupees(subtotal)} + GST {_rupees(tax)} = {_rupees(subtotal + tax)}, "
-            f"but the total reads {_rupees(e.total_paise)}"
+            f"Subtotal {rupees(subtotal)} + GST {rupees(tax)} = {rupees(subtotal + tax)}, "
+            f"but the total reads {rupees(e.total_paise)}"
         )
 
     low = [k for k, v in e.field_confidence.items() if Decimal(str(v)) < min_confidence]

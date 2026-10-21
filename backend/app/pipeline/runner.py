@@ -11,8 +11,12 @@ from collections.abc import Callable
 from google.cloud import firestore
 
 from app.agents import extraction
-from app.models.invoice import AiUsage, Extracted
+from app.models.invoice import AiUsage, Decision, Extracted, MatchIssue, MatchResult
 from app.models.invoice import InvoiceStatus as S
+from app.models.invoice import MatchIssueKind as K
+from app.pipeline import lookup
+from app.pipeline.decide import decide
+from app.pipeline.match import match_invoice, normalize_po_number
 from app.pipeline.status import InvalidTransition, transition
 from app.pipeline.validate import check, to_extracted
 from app.services import rules as rules_svc
@@ -24,7 +28,33 @@ AGENT = "agent"
 Step = Callable[[firestore.Client, str], None]
 
 
+def _invoice(db: firestore.Client, invoice_id: str) -> dict:
+    return db.collection("invoices").document(invoice_id).get().to_dict()
+
+
 def _start(db: firestore.Client, invoice_id: str) -> None:
+    # Duplicate check, part 1: the exact same file was uploaded before. Caught before any
+    # model call, so a re-upload costs nothing.
+    me = _invoice(db, invoice_id)
+    original = lookup.duplicate_file(db, me)
+    if original:
+        reason = f"This is the same file as {original['invoice_id']}, uploaded earlier."
+        transition(
+            db,
+            invoice_id,
+            S.blocked_duplicate,
+            actor=AGENT,
+            action="duplicate_blocked",
+            details=reason,
+            expected_from=S.received,
+            updates={
+                "decision": Decision.block.value,
+                "decision_rule": "duplicate",
+                "decision_reason": reason,
+                "duplicate_of": original["invoice_id"],
+            },
+        )
+        return
     transition(
         db,
         invoice_id,
@@ -135,18 +165,105 @@ def _validate(db: firestore.Client, invoice_id: str) -> None:
     )
 
 
-def _await_matching(db: firestore.Client, invoice_id: str) -> None:
-    # The 3-way match arrives in Phase 5. Until then a person takes it from here.
+def _match(db: firestore.Client, invoice_id: str) -> None:
+    """Duplicate check (part 2), supplier and PO lookup, and the 3-way match. Records what it
+    found as match_result; the decide step turns that into a decision."""
+    me = _invoice(db, invoice_id)
+    e = Extracted(**me["extracted"])
+    rules = rules_svc.get_rules(db)
+    supplier = lookup.resolve_supplier(db, e)
+    supplier_key = lookup.supplier_key(supplier, e)
+    invoice_no_key = lookup.normalize_invoice_no(e.invoice_no)
+    duplicate_key = f"{supplier_key}|{invoice_no_key}"
+    issues: list[MatchIssue] = []
+    result = MatchResult(supplier_id=supplier.key)
+
+    original = lookup.duplicate_number(db, me, duplicate_key)
+    if original:
+        issues.append(
+            MatchIssue(
+                kind=K.duplicate,
+                message=f"Invoice {e.invoice_no} from {e.supplier_name} was already uploaded "
+                f"as {original['invoice_id']}",
+            )
+        )
+    else:
+        po_number = normalize_po_number(e.po_number)
+        po = lookup.get_po(db, po_number) if po_number else None
+        if supplier.problem:
+            issues.append(MatchIssue(kind=K.supplier, message=supplier.problem))
+        if not e.po_number:
+            # Phase 7 adds the Resolution Agent, which searches open POs for these.
+            issues.append(MatchIssue(kind=K.no_po, message="The invoice has no PO number"))
+        elif po is None:
+            issues.append(
+                MatchIssue(kind=K.no_po, message=f"PO number '{e.po_number}' was not found")
+            )
+        elif po["status"] == "closed":
+            issues.append(MatchIssue(kind=K.no_po, message=f"{po_number} is closed"))
+        elif supplier.supplier and po["supplier_id"] != supplier.key:
+            issues.append(
+                MatchIssue(
+                    kind=K.supplier,
+                    message=f"{po_number} is for {po['supplier_name']}, but this invoice is "
+                    f"from {supplier.supplier['name']}",
+                )
+            )
+        if po is not None and not issues:
+            committed = lookup.committed_quantities(db, me, po["po_number"])
+            result = match_invoice(e, po, rules.price_tolerance_percent, committed)
+            if e.total_paise is not None and e.invoice_date is not None:
+                other = lookup.possible_duplicate(
+                    db, me, supplier_key, e.total_paise, e.invoice_date
+                )
+                if other:
+                    result.issues.append(
+                        MatchIssue(
+                            kind=K.possible_duplicate,
+                            message=f"{other['invoice_id']} is from the same supplier for the "
+                            "same total within a week, under a different invoice number",
+                        )
+                    )
+    result.issues = issues + result.issues
+
     transition(
         db,
         invoice_id,
-        S.needs_review,
+        S.matched,
         actor=AGENT,
-        action="matching_unavailable",
-        details="Read and checked. Matching against purchase orders and deliveries is not "
-        "switched on yet, so a person needs to check this invoice.",
+        action="matched",
+        details=f"Matched against {result.matched_po}"
+        if result.matched_po
+        else "Could not be matched to a purchase order",
         expected_from=S.validated,
-        updates={"decision": "needs_review"},
+        updates={
+            "match_result": result.model_dump(mode="json"),
+            "supplier_key": supplier_key,
+            "invoice_no_key": invoice_no_key,
+            "duplicate_key": duplicate_key,
+        },
+    )
+
+
+def _decide(db: firestore.Client, invoice_id: str) -> None:
+    """Apply the business rules to the saved match result (no model call)."""
+    me = _invoice(db, invoice_id)
+    result = MatchResult(**me["match_result"])
+    total = me["extracted"].get("total_paise") or 0
+    outcome = decide(result, total, rules_svc.get_rules(db))
+    transition(
+        db,
+        invoice_id,
+        outcome.status,
+        actor=AGENT,
+        action=f"decided_{outcome.decision.value}",
+        details=outcome.reason,
+        expected_from=S.matched,
+        updates={
+            "decision": outcome.decision.value,
+            "decision_rule": outcome.rule,
+            "decision_reason": outcome.reason,
+        },
     )
 
 
@@ -156,7 +273,8 @@ STEPS: dict[S, Step] = {
     S.received: _start,
     S.extracting: _extract,
     S.extracted: _validate,
-    S.validated: _await_matching,
+    S.validated: _match,
+    S.matched: _decide,
 }
 
 _MAX_STEPS = 20  # guards against a step that fails to move the invoice on
