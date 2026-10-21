@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { useAuth } from '@/auth/AuthProvider'
+import { ExtractedCard } from '@/pages/invoices/ExtractedCard'
 import { getAuditLog, getInvoice, getInvoiceFileUrl, reprocessInvoice } from '@/lib/api'
 import { FEATURES } from '@/lib/features'
 import { formatDate, formatPaise, formatQty } from '@/lib/format'
@@ -121,22 +122,7 @@ export function InvoiceDetailPage() {
         </Card>
 
         <div className="grid content-start gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Extracted details</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {!inv.extracted && <p className="mb-4 text-sm text-muted-foreground">Not read yet.</p>}
-              <dl className="grid grid-cols-2 gap-4 text-sm">
-                <Field label="File" value={`${inv.file_name} (${Math.ceil(inv.file_size / 1024)} KB)`} />
-                <Field label="Supplier" value={inv.extracted?.supplier_name} />
-                <Field label="Invoice number" value={inv.extracted?.invoice_no} />
-                <Field label="Invoice date" value={inv.extracted?.invoice_date && formatDate(inv.extracted?.invoice_date)} />
-                <Field label="PO number" value={inv.extracted?.po_number} />
-                <Field label="Total" value={inv.extracted?.total_paise == null ? null : formatPaise(inv.extracted?.total_paise)} />
-              </dl>
-            </CardContent>
-          </Card>
+          <ExtractedCard inv={inv} />
 
           <Card className="py-2">
             <CardHeader className="pt-4">

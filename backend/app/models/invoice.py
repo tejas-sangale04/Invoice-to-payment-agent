@@ -37,12 +37,14 @@ class ExtractedItem(BaseModel):
     unit: str | None = None
     unit_price_paise: int
     tax_rate: Decimal = Decimal("0")
+    amount_paise: int | None = None  # the line amount as printed, before tax
 
 
 class Extracted(BaseModel):
-    """What the Extraction Agent read from the invoice (filled in from Phase 4)."""
+    """What the Extraction Agent read from the invoice, converted to paise by code."""
 
     supplier_name: str | None = None
+    supplier_gstin: str | None = None
     invoice_no: str | None = None
     invoice_date: date | None = None
     po_number: str | None = None
@@ -74,6 +76,15 @@ class MatchResult(BaseModel):
     difference_paise: int = 0
 
 
+class AiUsage(BaseModel):
+    """Recorded per invoice for the dashboard; summed over every model call."""
+
+    calls: int = 0
+    input_tokens: int = 0
+    output_tokens: int = 0
+    latency_ms: int = 0
+
+
 class Invoice(BaseModel):
     invoice_id: str
     status: InvoiceStatus
@@ -84,6 +95,8 @@ class Invoice(BaseModel):
     file_hash: str
     extracted: Extracted | None = None
     match_result: MatchResult | None = None
+    validation_issues: list[str] = []
+    ai_usage: AiUsage | None = None
     decision: Decision | None = None
     decision_reason: str | None = None
     explanation: str | None = None
