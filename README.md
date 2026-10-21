@@ -12,9 +12,10 @@ The full specification and build plan is in [PROJECT_CONTEXT.md](PROJECT_CONTEXT
 | 2 | Master data: suppliers, purchase orders, deliveries (API, screens, tests), plus business rules | Done |
 | UI | Every screen from the setup guide, Section 10, with role-based navigation | Done |
 | 3 | Invoice intake: upload, file storage, invoice record, background job, status machine, audit log | Done |
-| 4 to 10 | Extraction, matching, approval, agents, dashboard, evaluation, deployment | Not started |
+| 4 | Extraction: ADK Extraction Agent on Gemini, strict schema, code validation with one corrective retry | Done |
+| 5 to 10 | Matching, approval, agents, dashboard, evaluation, deployment | Not started |
 
-Until Phase 4 adds the Extraction Agent, every uploaded invoice is routed to `needs_review` with a clear reason, never guessed at. Screens whose backend is not built yet (approval queue, ledger, dashboard) show a notice naming the phase that switches them on and make no API calls. Each is turned on by one flag in `frontend/src/lib/features.ts`.
+Until Phase 5 adds the 3-way match, invoices that read and check out are routed to `needs_review` with a clear reason, never approved. Screens whose backend is not built yet (approval queue, ledger, dashboard) show a notice naming the phase that switches them on and make no API calls. Each is turned on by one flag in `frontend/src/lib/features.ts`.
 
 ## What works today
 
@@ -27,6 +28,9 @@ Until Phase 4 adds the Extraction Agent, every uploaded invoice is routed to `ne
 - Every status change and its audit entry are written in one Firestore transaction. Illegal moves (for example `matched` straight to `posted`) are refused, repeated moves are no-ops, and the pipeline resumes from the saved status after a restart.
 - Errors are retried; after the last attempt the invoice ends in `failed` for a person to check, never in silent failure. Managers can reprocess invoices that are on hold, need review or failed.
 - Invoice files are only reachable through short-lived signed links.
+- The Extraction Agent (Google ADK, Gemini 2.5 Flash on Vertex AI, temperature 0) reads each invoice into a strict schema, copying values as printed with a confidence per field. It never calculates. Output that doesn't match the schema is never used.
+- Code then converts amounts to paise and checks them: required fields, quantity x price = line amount, line amounts = subtotal, CGST = SGST or IGST alone, GST = taxable value x rate, subtotal + GST = total (each within Rs 1), and every field's confidence against the admin's minimum. If anything fails, the problems are sent back to Gemini once; if the second reading still fails, the invoice goes to a person with the reasons listed. Gemini timeouts and errors are retried by the background task.
+- Tokens, calls and latency are recorded on each invoice for the Phase 8 dashboard.
 
 ## Background processing and file storage
 
@@ -35,6 +39,8 @@ Until Phase 4 adds the Extraction Agent, every uploaded invoice is routed to `ne
 | `STORAGE_MODE` | `local` (files in `backend/.data/uploads`) | `gcs` with `GCS_BUCKET`; links are V4 signed URLs signed through IAM, so the Cloud Run service account needs Service Account Token Creator on itself |
 | `TASKS_MODE` | `inline` (runs in the API process after the upload response, same retry logic) | `cloud_tasks` with `TASKS_QUEUE`, `TASKS_LOCATION`, `TASKS_SERVICE_ACCOUNT` and `API_BASE_URL` |
 | `MAX_PROCESSING_ATTEMPTS` | 5 | Must match the Cloud Tasks queue's max attempts |
+| `EXTRACTOR` | `disabled` in `.env.example` (no Google Cloud credentials needed; invoices go to review) | `gemini` (the default), with `GOOGLE_GENAI_USE_VERTEXAI=TRUE`, `GOOGLE_CLOUD_PROJECT`, `GOOGLE_CLOUD_LOCATION`; the service account needs Vertex AI User |
+| `GEMINI_MODEL` | `gemini-2.5-flash` | Same, or another Gemini model |
 
 `POST /tasks/process-invoice` only accepts a Google-signed OIDC token for `TASKS_SERVICE_ACCOUNT` with the API URL as audience, and refuses every call in inline mode.
 

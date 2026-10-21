@@ -1,4 +1,8 @@
+import os
 from unittest.mock import MagicMock
+
+# Tests never call Gemini; ones that need extraction inject a fake extractor.
+os.environ["EXTRACTOR"] = "disabled"
 
 import pytest
 from fastapi.testclient import TestClient

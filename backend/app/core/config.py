@@ -42,6 +42,13 @@ class Settings(BaseSettings):
     # Retries before an invoice is marked failed (Cloud Tasks queue max attempts must match).
     max_processing_attempts: int = 5
 
+    # Extraction Agent. "gemini" calls Gemini on Vertex AI (needs GOOGLE_GENAI_USE_VERTEXAI,
+    # GOOGLE_CLOUD_PROJECT and GOOGLE_CLOUD_LOCATION, as in Coffee-Barista). "disabled" sends
+    # every invoice to a person instead, for local dev without Google Cloud credentials.
+    extractor: Literal["gemini", "disabled"] = "gemini"
+    gemini_model: str = "gemini-2.5-flash"
+    gemini_timeout_seconds: float = 60
+
 
 @lru_cache
 def get_settings() -> Settings:

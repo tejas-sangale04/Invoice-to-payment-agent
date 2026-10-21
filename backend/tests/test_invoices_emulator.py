@@ -60,7 +60,7 @@ def test_upload_creates_record_then_pipeline_routes_to_review(api: TestClient) -
     inv = api.get("/invoices/INV-1", headers=STAFF).json()
     assert inv["status"] == "needs_review"
     assert inv["decision"] == "needs_review"
-    assert "not switched on yet" in inv["status_reason"]
+    assert "switched off" in inv["status_reason"]
     assert inv["processing_attempts"] == 1
     assert set(inv["status_times"]) == {"received", "extracting", "needs_review"}
     assert audit_actions(api, "INV-1") == [

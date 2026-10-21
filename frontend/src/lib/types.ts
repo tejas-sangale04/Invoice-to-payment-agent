@@ -88,10 +88,18 @@ export interface MatchLine {
 
 export interface Extracted {
   supplier_name: string | null
+  supplier_gstin: string | null
   invoice_no: string | null
   invoice_date: string | null
   po_number: string | null
-  items: { name: string; qty: string; unit: string | null; unit_price_paise: number; tax_rate: string }[]
+  items: {
+    name: string
+    qty: string
+    unit: string | null
+    unit_price_paise: number
+    tax_rate: string
+    amount_paise: number | null
+  }[]
   subtotal_paise: number | null
   cgst_paise: number
   sgst_paise: number
@@ -116,6 +124,8 @@ export interface Invoice {
     correct_amount_paise: number
     difference_paise: number
   } | null
+  validation_issues: string[]
+  ai_usage: { calls: number; input_tokens: number; output_tokens: number; latency_ms: number } | null
   decision: Decision | null
   decision_reason: string | null
   explanation: string | null
