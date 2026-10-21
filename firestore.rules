@@ -1,0 +1,10 @@
+rules_version = '2';
+// All reads and writes go through the FastAPI backend (Admin SDK), which enforces roles.
+// Browsers never talk to Firestore directly, so client access is denied outright.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

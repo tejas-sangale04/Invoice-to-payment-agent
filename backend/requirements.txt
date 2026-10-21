@@ -1,0 +1,10 @@
+fastapi==0.150.0
+uvicorn[standard]==0.54.0
+pydantic[email]==2.14.1
+pydantic-settings==2.16.0
+firebase-admin==7.7.0
+google-cloud-firestore==2.34.1
+python-dotenv==1.2.4
+google-cloud-storage==3.17.1
+google-cloud-tasks==2.26.0
+python-multipart==0.0.32
