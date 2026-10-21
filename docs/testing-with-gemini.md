@@ -64,7 +64,7 @@ If checks fail, the script shows which ones, sends them back to Gemini once and 
 
 ## 5. Full app: upload in the browser
 
-You need Node 22, Java 21 and `npm install -g firebase-tools`. Use three terminals:
+You need Node 24 LTS (24.12 or newer; the Firebase SDK requires it), Java 21 and `npm install -g firebase-tools`. Use three terminals:
 
 ```bash
 # Terminal 1, repo root: emulators

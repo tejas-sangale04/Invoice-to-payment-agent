@@ -54,7 +54,7 @@ firebase.json   Local Firebase Auth and Firestore emulators
 
 ## Run locally
 
-Prerequisites: Python 3.11+, Node 22, Java 21 (for the Firestore emulator) and `npm install -g firebase-tools`.
+Prerequisites: Python 3.11+, Node 24 LTS (24.12 or newer; the Firebase SDK requires it), Java 21 (for the Firestore emulator) and `npm install -g firebase-tools`.
 
 ```bash
 # 1. Emulators (Auth on :9099, Firestore on :8080, UI on :4000)
