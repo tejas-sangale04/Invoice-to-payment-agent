@@ -4,16 +4,16 @@ import { useParams } from 'react-router-dom'
 import { toast } from 'sonner'
 
 import { PageHeader } from '@/components/PageHeader'
-import { EmptyState, ErrorState, LoadingState, NotLiveNotice } from '@/components/States'
+import { ErrorState, LoadingState, NotLiveNotice } from '@/components/States'
 import { StatusBadge } from '@/components/StatusBadge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { useAuth } from '@/auth/AuthProvider'
 import { ExtractedCard } from '@/pages/invoices/ExtractedCard'
+import { MatchCard } from '@/pages/invoices/MatchCard'
 import { getAuditLog, getInvoice, getInvoiceFileUrl, reprocessInvoice } from '@/lib/api'
 import { FEATURES } from '@/lib/features'
-import { formatDate, formatPaise, formatQty } from '@/lib/format'
+import { formatDate } from '@/lib/format'
 import { hasRole } from '@/lib/roles'
 import type { InvoiceStatus } from '@/lib/types'
 import { cn } from '@/lib/utils'
@@ -22,15 +22,6 @@ import { cn } from '@/lib/utils'
 const PROCESSING: InvoiceStatus[] = ['received', 'extracting', 'extracted', 'validated', 'matched']
 const REPROCESSABLE: InvoiceStatus[] = ['on_hold', 'needs_review', 'failed']
 const ATTENTION: InvoiceStatus[] = ['on_hold', 'needs_review', 'failed', 'blocked_duplicate', 'rejected']
-
-function Field({ label, value }: { label: string; value: string | null | undefined }) {
-  return (
-    <div>
-      <dt className="text-xs text-muted-foreground">{label}</dt>
-      <dd className="font-medium">{value || '—'}</dd>
-    </div>
-  )
-}
 
 export function InvoiceDetailPage() {
   const { invoiceId = '' } = useParams()
@@ -65,7 +56,6 @@ export function InvoiceDetailPage() {
   if (invoice.isPending) return <LoadingState />
   if (invoice.isError) return <ErrorState error={invoice.error} />
   const inv = invoice.data
-  const match = inv.match_result
 
   return (
     <>
@@ -124,48 +114,7 @@ export function InvoiceDetailPage() {
         <div className="grid content-start gap-6">
           <ExtractedCard inv={inv} />
 
-          <Card className="py-2">
-            <CardHeader className="pt-4">
-              <CardTitle className="text-base">3-way match {match?.matched_po && `against ${match.matched_po}`}</CardTitle>
-            </CardHeader>
-            <CardContent className="px-2">
-              {!match ? (
-                <EmptyState title="Not matched yet" />
-              ) : (
-                <>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Item</TableHead>
-                        <TableHead className="text-right">Billed</TableHead>
-                        <TableHead className="text-right">Received, unbilled</TableHead>
-                        <TableHead className="text-right">Billed price</TableHead>
-                        <TableHead className="text-right">PO price</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {match.per_line.map((l, i) => (
-                        <TableRow key={i} className={cn(l.issue && 'bg-warning/10')}>
-                          <TableCell className="font-medium">
-                            {l.name}
-                            {l.issue && <p className="text-xs font-normal text-amber-700">{l.issue}</p>}
-                          </TableCell>
-                          <TableCell className="text-right tabular-nums">{formatQty(l.billed_qty)}</TableCell>
-                          <TableCell className="text-right tabular-nums">{formatQty(l.available_qty)}</TableCell>
-                          <TableCell className="text-right tabular-nums">{formatPaise(l.billed_unit_price_paise)}</TableCell>
-                          <TableCell className="text-right tabular-nums">{formatPaise(l.po_unit_price_paise)}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                  <dl className="grid grid-cols-2 gap-4 p-2 text-sm">
-                    <Field label="Correct amount" value={formatPaise(match.correct_amount_paise)} />
-                    <Field label="Difference" value={formatPaise(match.difference_paise)} />
-                  </dl>
-                </>
-              )}
-            </CardContent>
-          </Card>
+          <MatchCard inv={inv} />
 
           <Card>
             <CardHeader className="flex items-center justify-between">
