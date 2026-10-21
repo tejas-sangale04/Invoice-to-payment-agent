@@ -82,7 +82,7 @@ npm run dev
 
 Open http://localhost:5173, sign in as `staff@invoiceflow.test` / `password123`, go to **Upload invoice** and upload `backend/samples/sample-invoice.pdf`. The invoice page shows the status moving from received to extracting. When Gemini is done it shows what was read, the confidence for each field and the tokens used.
 
-It then stops at **Needs review** with the note "Read and checked. Matching against purchase orders and deliveries is not available yet". That's expected: the 3-way match against the purchase order isn't built yet.
+It then stops at **Needs review** with the note "Read and checked. Matching against purchase orders and deliveries is not switched on yet". That's expected: the 3-way match against the purchase order isn't built yet.
 
 ## If something goes wrong
 
