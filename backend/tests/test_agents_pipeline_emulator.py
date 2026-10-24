@@ -64,7 +64,8 @@ def test_agent_finds_the_po_and_a_manager_must_approve(api, monkeypatch, po1, ag
     assert inv["status"] == "pending_approval"
     assert inv["decision_rule"] == "matched_without_po_number"
     assert inv["decision_reason"] == (
-        "The invoice has no PO number; it was matched to PO-1 by the agent."
+        "The invoice's PO number is missing or isn't one of ours; "
+        "it was matched to PO-1 by the agent."
     )
     assert inv["match_result"]["matched_po"] == "PO-1"
     assert inv["match_result"]["matched_without_po_number"] is True
@@ -72,6 +73,30 @@ def test_agent_finds_the_po_and_a_manager_must_approve(api, monkeypatch, po1, ag
     assert (r["proposed_po"], r["verified"], r["fitting_pos"]) == ("PO-1", True, ["PO-1"])
     assert r["reasoning"] == "PO-1 has 50 L milk and 2.5 kg paneer."
     assert inv["ai_usage"]["calls"] == 2  # reading + resolution
+
+
+def test_a_po_number_that_is_not_ours_is_matched_by_content(api, monkeypatch, po1, agent) -> None:
+    deliver(api, po1)
+    agent(picks("PO-1"))
+    use(monkeypatch, invoice_json(po_number="KFP/ORD/771"))
+    inv = upload(api)
+    assert inv["status"] == "pending_approval"
+    assert inv["decision_rule"] == "matched_without_po_number"
+    assert inv["match_result"]["matched_po"] == "PO-1"
+    assert inv["resolution"]["message"] == (
+        "PO number 'KFP/ORD/771' was not found; the agent matched it to PO-1"
+    )
+
+
+def test_a_foreign_po_number_with_no_fitting_po_goes_to_a_person(
+    api, monkeypatch, po1, agent
+) -> None:
+    deliver(api, po1)
+    agent(picks(None))
+    use(monkeypatch, invoice_json(po_number="KFP/ORD/771"))
+    inv = upload(api)
+    assert inv["status"] == "needs_review"
+    assert "PO number 'KFP/ORD/771' was not found, and no single open PO" in inv["status_reason"]
 
 
 def test_found_po_is_still_held_for_a_short_delivery(api, monkeypatch, po1, agent) -> None:

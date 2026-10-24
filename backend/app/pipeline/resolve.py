@@ -151,7 +151,11 @@ def resolve(
     usage: AiUsage,
 ) -> tuple[dict | None, Resolution]:
     """The verified PO (or None) and the record of what happened, for the invoice."""
-    no_po = "The invoice has no PO number"
+    no_po = (
+        f"PO number '{extracted.po_number}' was not found"
+        if extracted.po_number
+        else "The invoice has no PO number"
+    )
     resolver = resolution.get_resolver()
     if resolver is None:
         return None, Resolution(message=no_po)
