@@ -123,7 +123,16 @@ export function InvoiceDetailPage() {
             </CardHeader>
             <CardContent className="grid gap-3 text-sm">
               {inv.decision_reason && <p className="font-medium">{inv.decision_reason}</p>}
-              {inv.explanation && <p className="text-muted-foreground">{inv.explanation}</p>}
+              {inv.explanation && (
+                <div className="grid gap-1">
+                  <p className="text-muted-foreground">{inv.explanation}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {inv.explanation_source === 'agent'
+                      ? 'Written by the agent from the match results; the amounts were checked.'
+                      : 'Standard wording from the match results.'}
+                  </p>
+                </div>
+              )}
               {inv.supplier_email_draft && (
                 <div className="rounded-md border bg-muted/40 p-3">
                   <div className="mb-2 flex items-center justify-between">

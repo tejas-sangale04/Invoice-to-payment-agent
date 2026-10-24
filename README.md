@@ -15,7 +15,8 @@ The full specification and build plan is in [PROJECT_CONTEXT.md](PROJECT_CONTEXT
 | 4 | Extraction: ADK Extraction Agent on Gemini, strict schema, code validation with one corrective retry | Done |
 | 5 | Matching and decisions: duplicate check, supplier and PO lookup, 3-way match with partial deliveries and GST, decision rules | Done |
 | 6 | Approval and posting: approval queue, separation of duties, one-time ledger posting, PO billing | Done |
-| 7 to 10 | Explanation and Resolution agents, dashboard, evaluation, deployment | Not started |
+| 7 | Agentic exceptions: Resolution Agent for missing PO numbers, Explanation Agent with number check and template fallback | Done |
+| 8 to 10 | Dashboard, evaluation, deployment | Not started |
 
 Screens whose backend is not built yet (the dashboard) show a notice naming the phase that switches them on and make no API calls. Each is turned on by one flag in `frontend/src/lib/features.ts`.
 
@@ -38,6 +39,9 @@ Screens whose backend is not built yet (the dashboard) show a notice naming the 
 - The PO number is read loosely ("po-1", "P.O. No. 001" and "1" are all PO-1). Each billed line is paired with its PO line by name ("Milk" = "Full cream milk") and compared per line: billed quantity against received minus already billed (several deliveries add up; invoices approved but not yet posted count as billed, so two invoices can't bill the same delivery), price against the PO price, and GST rate against the PO rate. Code works out the correct amount and the difference.
 - Code then decides, first rule wins: duplicate → block; can't match supplier, PO, a line or a unit → needs review; billed more than received → hold; price over the tolerance or GST rate differs → hold; price over but within tolerance → manager approval; total over the auto-approve limit → manager approval; possible duplicate → manager approval; otherwise auto-approve. Only overcharges count: a lower price is paid as billed. Every rule has unit tests.
 - Auto-approved invoices are posted to the ledger straight away. Invoices sent for approval wait in the manager's approval queue, which shows the billed amount, the correct amount and the difference. Approving posts the invoice; rejecting needs a reason. Nobody can approve or reject an invoice they uploaded.
+- Invoices without a PO number go to the Resolution Agent (ADK, Gemini), which searches the supplier's open POs with a tool and proposes one. Code then checks it: every line must be on the PO in the same unit with enough left to bill (a PO whose deliveries cover the invoice beats one that was only ordered), and it must be the only PO that fits. Otherwise the invoice goes to a person. An invoice matched this way always needs a manager.
+- Every invoice that isn't auto-approved gets a plain-language explanation and, when the supplier needs to act (an overcharge, a wrong GST rate, a duplicate, a missing PO number), a draft email. The Explanation Agent writes them from facts code prepares; code then checks that the key amounts (invoice total, correct amount, difference) appear and that no other amount does. A failed check goes back to the agent once, then a template is used. Explanations never decide anything.
+- With `EXCEPTION_AGENTS=disabled` (or `EXTRACTOR=disabled`) the template is used and invoices without a PO number go to a person.
 - Posting is one Firestore transaction: it creates `ledger_entries/{supplier_id}_{invoice_no}`, adds the billed quantities to the PO (open → partially billed → fully billed) and moves the invoice to `posted`. If that key is already in the ledger nothing is posted, so an invoice is paid once even if two copies are approved at the same moment (there is an emulator test for that). The amount posted is the correct amount, at no more than the PO price.
 
 ## Background processing and file storage

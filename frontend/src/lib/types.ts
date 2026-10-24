@@ -163,6 +163,8 @@ export interface Invoice {
   decision_reason: string | null
   decision_rule: string | null
   explanation: string | null
+  explanation_source: 'agent' | 'template' | null
+  resolution: Resolution | null
   supplier_email_draft: string | null
   uploaded_by: string
   approved_by: string | null
@@ -178,6 +180,14 @@ export interface Invoice {
   created_at: string
   updated_at: string
   status_times: Record<string, string>
+}
+
+export interface Resolution {
+  proposed_po: string | null
+  reasoning: string | null
+  fitting_pos: string[]
+  verified: boolean
+  message: string
 }
 
 export interface LedgerEntry {

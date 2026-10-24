@@ -16,8 +16,10 @@ from app.models.invoice import InvoiceStatus as S
 from app.models.invoice import MatchIssueKind as K
 from app.pipeline import lookup
 from app.pipeline.decide import decide
+from app.pipeline.explain import explain
 from app.pipeline.match import match_invoice, normalize_po_number
 from app.pipeline.post import post_invoice
+from app.pipeline.resolve import resolve
 from app.pipeline.status import InvalidTransition, transition
 from app.pipeline.validate import check, to_extracted
 from app.services import rules as rules_svc
@@ -178,6 +180,8 @@ def _match(db: firestore.Client, invoice_id: str) -> None:
     duplicate_key = f"{supplier_key}|{invoice_no_key}"
     issues: list[MatchIssue] = []
     result = MatchResult(supplier_id=supplier.key)
+    usage = AiUsage(**(me.get("ai_usage") or {}))
+    resolution = None
 
     original = lookup.duplicate_number(db, me, duplicate_key)
     if original:
@@ -193,8 +197,14 @@ def _match(db: firestore.Client, invoice_id: str) -> None:
         po = lookup.get_po(db, po_number) if po_number else None
         if supplier.problem:
             issues.append(MatchIssue(kind=K.supplier, message=supplier.problem))
-        if not e.po_number:
-            # Phase 7 adds the Resolution Agent, which searches open POs for these.
+        if not e.po_number and supplier.supplier and not supplier.problem:
+            # The Resolution Agent searches the supplier's open POs; code checks its pick.
+            po, resolution = resolve(
+                db, me, e, supplier.supplier, rules.price_tolerance_percent, usage
+            )
+            if po is None:
+                issues.append(MatchIssue(kind=K.no_po, message=resolution.message))
+        elif not e.po_number:
             issues.append(MatchIssue(kind=K.no_po, message="The invoice has no PO number"))
         elif po is None:
             issues.append(
@@ -213,6 +223,7 @@ def _match(db: firestore.Client, invoice_id: str) -> None:
         if po is not None and not issues:
             committed = lookup.committed_quantities(db, me, po["po_number"])
             result = match_invoice(e, po, rules.price_tolerance_percent, committed)
+            result.matched_without_po_number = resolution is not None
             if e.total_paise is not None and e.invoice_date is not None:
                 other = lookup.possible_duplicate(
                     db, me, supplier_key, e.total_paise, e.invoice_date
@@ -242,6 +253,8 @@ def _match(db: firestore.Client, invoice_id: str) -> None:
             "supplier_key": supplier_key,
             "invoice_no_key": invoice_no_key,
             "duplicate_key": duplicate_key,
+            "resolution": resolution.model_dump() if resolution else None,
+            "ai_usage": usage.model_dump(),
         },
     )
 
@@ -252,6 +265,12 @@ def _decide(db: firestore.Client, invoice_id: str) -> None:
     result = MatchResult(**me["match_result"])
     total = me["extracted"].get("total_paise") or 0
     outcome = decide(result, total, rules_svc.get_rules(db))
+    updates = {}
+    if outcome.decision != Decision.auto_approve:
+        # The Explanation Agent writes it up; code checks the numbers (template fallback).
+        usage = AiUsage(**(me.get("ai_usage") or {}))
+        text = explain(Extracted(**me["extracted"]), result, outcome, usage)
+        updates = {**text.updates(), "ai_usage": usage.model_dump()}
     transition(
         db,
         invoice_id,
@@ -264,6 +283,7 @@ def _decide(db: firestore.Client, invoice_id: str) -> None:
             "decision": outcome.decision.value,
             "decision_rule": outcome.rule,
             "decision_reason": outcome.reason,
+            **updates,
         },
     )
 

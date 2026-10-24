@@ -85,6 +85,8 @@ The agent then matches it against the purchase order and decides. To see it auto
 
 To try an approval, make the PO price for milk Rs 59 (the invoice's Rs 60 is within the 2% tolerance), so the invoice goes to the **Approval queue**. Sign in as a manager who didn't upload it, approve it and it appears in the Ledger at the PO price. Whoever uploaded an invoice can't approve or reject it.
 
+With `EXTRACTOR=gemini` the Explanation and Resolution agents use Gemini too (set `EXCEPTION_AGENTS=disabled` to keep them off). Any invoice that isn't auto-approved then shows an explanation and, when the supplier needs to fix something, a draft email to copy. To try the Resolution Agent, upload an invoice with no PO number printed on it: the agent searches that supplier's open POs and, if exactly one fits, the invoice goes to the approval queue marked as matched without a PO number.
+
 ## If something goes wrong
 
 | Error | Fix |
