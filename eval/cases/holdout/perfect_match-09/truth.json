@@ -1,0 +1,119 @@
+{
+  "id": "perfect_match-09",
+  "kind": "perfect_match",
+  "split": "holdout",
+  "description": "Sharma Dairy Pvt Ltd: 1 line(s), all delivered, billed at PO prices",
+  "world": {
+    "suppliers": [
+      {
+        "key": "sharma",
+        "name": "Sharma Dairy Pvt Ltd",
+        "email": "accounts@sharmadairy.example.in",
+        "gstin": "27AAPCS1234F1Z5"
+      }
+    ],
+    "purchase_orders": [
+      {
+        "po_number": "PO-1",
+        "supplier": "sharma",
+        "items": [
+          {
+            "name": "Cow ghee",
+            "qty": "4",
+            "unit": "L",
+            "unit_price_paise": 65000,
+            "tax_rate": "12"
+          }
+        ]
+      }
+    ],
+    "receipts": [
+      {
+        "po_number": "PO-1",
+        "items": [
+          {
+            "line_id": "1",
+            "qty_received": "4"
+          }
+        ]
+      }
+    ]
+  },
+  "prior": [],
+  "invoice": {
+    "file": "invoice.jpg",
+    "layout": 1,
+    "messy": "lowres",
+    "same_file_as_prior": false,
+    "reading": {
+      "supplier_name": "Sharma Dairy Pvt. Ltd.",
+      "supplier_gstin": "27AAPCS1234F1Z5",
+      "invoice_no": "SD-2026-5675",
+      "invoice_date": "2026-10-03",
+      "po_number": "PO-1",
+      "items": [
+        {
+          "name": "Cow ghee",
+          "qty": "4",
+          "unit": "L",
+          "unit_price": "650.00",
+          "tax_rate": "12%",
+          "amount": "2,600.00"
+        }
+      ],
+      "subtotal": "2,600.00",
+      "cgst": "156.00",
+      "sgst": "156.00",
+      "igst": null,
+      "total": "2,912.00",
+      "field_confidence": {
+        "supplier_name": 1.0,
+        "invoice_no": 1.0,
+        "invoice_date": 1.0,
+        "po_number": 1.0,
+        "line_items": 1.0,
+        "totals": 1.0
+      }
+    },
+    "fields": {
+      "supplier_name": "Sharma Dairy Pvt. Ltd.",
+      "supplier_gstin": "27AAPCS1234F1Z5",
+      "invoice_no": "SD-2026-5675",
+      "invoice_date": "2026-10-03",
+      "po_number": "PO-1",
+      "items": [
+        {
+          "qty": "4",
+          "unit_price_paise": 65000,
+          "tax_rate": "12",
+          "amount_paise": 260000
+        }
+      ],
+      "subtotal_paise": 260000,
+      "gst_paise": {
+        "cgst": 15600,
+        "sgst": 15600,
+        "igst": 0
+      },
+      "total_paise": 291200
+    }
+  },
+  "expect": {
+    "decision": "auto_approve",
+    "rule": "all_matched",
+    "status": "posted",
+    "po_number": "PO-1",
+    "correct_amount_paise": 291200,
+    "invoice_total_paise": 291200,
+    "approve": false,
+    "ledger": [
+      {
+        "invoice_no": "SD-2026-5675",
+        "amount_paise": 291200
+      }
+    ],
+    "po_status": {
+      "PO-1": "fully_billed"
+    }
+  }
+}

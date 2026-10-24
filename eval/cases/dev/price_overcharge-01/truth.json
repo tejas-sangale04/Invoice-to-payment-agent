@@ -1,0 +1,114 @@
+{
+  "id": "price_overcharge-01",
+  "kind": "price_overcharge",
+  "split": "dev",
+  "description": "Bengaluru Bean Roasters Pvt Ltd: Cold brew concentrate billed 5% above the PO price",
+  "world": {
+    "suppliers": [
+      {
+        "key": "bean",
+        "name": "Bengaluru Bean Roasters Pvt Ltd",
+        "email": "invoices@bbroasters.example.in",
+        "gstin": "29AABCB4321K1Z8"
+      }
+    ],
+    "purchase_orders": [
+      {
+        "po_number": "PO-1",
+        "supplier": "bean",
+        "items": [
+          {
+            "name": "Cold brew concentrate",
+            "qty": "5",
+            "unit": "L",
+            "unit_price_paise": 60000,
+            "tax_rate": "12"
+          }
+        ]
+      }
+    ],
+    "receipts": [
+      {
+        "po_number": "PO-1",
+        "items": [
+          {
+            "line_id": "1",
+            "qty_received": "5"
+          }
+        ]
+      }
+    ]
+  },
+  "prior": [],
+  "invoice": {
+    "file": "invoice.pdf",
+    "layout": 3,
+    "messy": null,
+    "same_file_as_prior": false,
+    "reading": {
+      "supplier_name": "Bengaluru Bean Roasters Private Limited",
+      "supplier_gstin": "29AABCB4321K1Z8",
+      "invoice_no": "BBR-INV-09356",
+      "invoice_date": "2026-10-08",
+      "po_number": "PO-1",
+      "items": [
+        {
+          "name": "Cold brew concentrate",
+          "qty": "5",
+          "unit": "L",
+          "unit_price": "630.00",
+          "tax_rate": "12",
+          "amount": "3150.00"
+        }
+      ],
+      "subtotal": "3150.00",
+      "cgst": null,
+      "sgst": null,
+      "igst": "378.00",
+      "total": "3528.00",
+      "field_confidence": {
+        "supplier_name": 1.0,
+        "invoice_no": 1.0,
+        "invoice_date": 1.0,
+        "po_number": 1.0,
+        "line_items": 1.0,
+        "totals": 1.0
+      }
+    },
+    "fields": {
+      "supplier_name": "Bengaluru Bean Roasters Private Limited",
+      "supplier_gstin": "29AABCB4321K1Z8",
+      "invoice_no": "BBR-INV-09356",
+      "invoice_date": "2026-10-08",
+      "po_number": "PO-1",
+      "items": [
+        {
+          "qty": "5",
+          "unit_price_paise": 63000,
+          "tax_rate": "12",
+          "amount_paise": 315000
+        }
+      ],
+      "subtotal_paise": 315000,
+      "gst_paise": {
+        "cgst": 0,
+        "sgst": 0,
+        "igst": 37800
+      },
+      "total_paise": 352800
+    }
+  },
+  "expect": {
+    "decision": "hold",
+    "rule": "price_over_tolerance",
+    "status": "on_hold",
+    "po_number": "PO-1",
+    "correct_amount_paise": 336000,
+    "invoice_total_paise": 352800,
+    "approve": false,
+    "ledger": [],
+    "po_status": {
+      "PO-1": "open"
+    }
+  }
+}

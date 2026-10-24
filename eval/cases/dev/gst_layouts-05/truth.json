@@ -1,0 +1,169 @@
+{
+  "id": "gst_layouts-05",
+  "kind": "gst_layouts",
+  "split": "dev",
+  "description": "Mehta Sugar & Syrups: 3 lines, GST 18%, 5% as IGST",
+  "world": {
+    "suppliers": [
+      {
+        "key": "mehta",
+        "name": "Mehta Sugar & Syrups",
+        "email": "billing@mehtasyrups.example.in",
+        "gstin": "24AAJPM2580Q1Z4"
+      }
+    ],
+    "purchase_orders": [
+      {
+        "po_number": "PO-1",
+        "supplier": "mehta",
+        "items": [
+          {
+            "name": "Sugar",
+            "qty": "50",
+            "unit": "kg",
+            "unit_price_paise": 4600,
+            "tax_rate": "5"
+          },
+          {
+            "name": "Vanilla syrup 750 ml",
+            "qty": "12",
+            "unit": "bottle",
+            "unit_price_paise": 45000,
+            "tax_rate": "18"
+          },
+          {
+            "name": "Caramel syrup 750 ml",
+            "qty": "12",
+            "unit": "bottle",
+            "unit_price_paise": 45000,
+            "tax_rate": "18"
+          }
+        ]
+      }
+    ],
+    "receipts": [
+      {
+        "po_number": "PO-1",
+        "items": [
+          {
+            "line_id": "1",
+            "qty_received": "50"
+          },
+          {
+            "line_id": "2",
+            "qty_received": "12"
+          },
+          {
+            "line_id": "3",
+            "qty_received": "12"
+          }
+        ]
+      }
+    ]
+  },
+  "prior": [],
+  "invoice": {
+    "file": "invoice.pdf",
+    "layout": 1,
+    "messy": null,
+    "same_file_as_prior": false,
+    "reading": {
+      "supplier_name": "Mehta Sugar & Syrups",
+      "supplier_gstin": "24AAJPM2580Q1Z4",
+      "invoice_no": "MSS-26-3692",
+      "invoice_date": "2026-10-20",
+      "po_number": "PO-1",
+      "items": [
+        {
+          "name": "Sugar",
+          "qty": "50",
+          "unit": "kg",
+          "unit_price": "46.00",
+          "tax_rate": "5%",
+          "amount": "2,300.00"
+        },
+        {
+          "name": "Vanilla syrup 750 ml",
+          "qty": "12",
+          "unit": "bottle",
+          "unit_price": "450.00",
+          "tax_rate": "18%",
+          "amount": "5,400.00"
+        },
+        {
+          "name": "Caramel syrup 750 ml",
+          "qty": "12",
+          "unit": "bottle",
+          "unit_price": "450.00",
+          "tax_rate": "18%",
+          "amount": "5,400.00"
+        }
+      ],
+      "subtotal": "13,100.00",
+      "cgst": null,
+      "sgst": null,
+      "igst": "2,059.00",
+      "total": "15,159.00",
+      "field_confidence": {
+        "supplier_name": 1.0,
+        "invoice_no": 1.0,
+        "invoice_date": 1.0,
+        "po_number": 1.0,
+        "line_items": 1.0,
+        "totals": 1.0
+      }
+    },
+    "fields": {
+      "supplier_name": "Mehta Sugar & Syrups",
+      "supplier_gstin": "24AAJPM2580Q1Z4",
+      "invoice_no": "MSS-26-3692",
+      "invoice_date": "2026-10-20",
+      "po_number": "PO-1",
+      "items": [
+        {
+          "qty": "50",
+          "unit_price_paise": 4600,
+          "tax_rate": "5",
+          "amount_paise": 230000
+        },
+        {
+          "qty": "12",
+          "unit_price_paise": 45000,
+          "tax_rate": "18",
+          "amount_paise": 540000
+        },
+        {
+          "qty": "12",
+          "unit_price_paise": 45000,
+          "tax_rate": "18",
+          "amount_paise": 540000
+        }
+      ],
+      "subtotal_paise": 1310000,
+      "gst_paise": {
+        "cgst": 0,
+        "sgst": 0,
+        "igst": 205900
+      },
+      "total_paise": 1515900
+    }
+  },
+  "expect": {
+    "decision": "auto_approve",
+    "rule": "all_matched",
+    "status": "posted",
+    "po_number": "PO-1",
+    "correct_amount_paise": 1515900,
+    "invoice_total_paise": 1515900,
+    "approve": false,
+    "ledger": [
+      {
+        "invoice_no": "MSS-26-3692",
+        "amount_paise": 1515900
+      }
+    ],
+    "po_status": {
+      "PO-1": "fully_billed"
+    }
+  }
+}

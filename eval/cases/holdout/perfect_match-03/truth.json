@@ -1,0 +1,169 @@
+{
+  "id": "perfect_match-03",
+  "kind": "perfect_match",
+  "split": "holdout",
+  "description": "Bengaluru Bean Roasters Pvt Ltd: 3 line(s), all delivered, billed at PO prices",
+  "world": {
+    "suppliers": [
+      {
+        "key": "bean",
+        "name": "Bengaluru Bean Roasters Pvt Ltd",
+        "email": "invoices@bbroasters.example.in",
+        "gstin": "29AABCB4321K1Z8"
+      }
+    ],
+    "purchase_orders": [
+      {
+        "po_number": "PO-1",
+        "supplier": "bean",
+        "items": [
+          {
+            "name": "Arabica coffee beans",
+            "qty": "5",
+            "unit": "kg",
+            "unit_price_paise": 145000,
+            "tax_rate": "5"
+          },
+          {
+            "name": "Robusta coffee beans",
+            "qty": "4",
+            "unit": "kg",
+            "unit_price_paise": 98000,
+            "tax_rate": "5"
+          },
+          {
+            "name": "Cold brew concentrate",
+            "qty": "10",
+            "unit": "L",
+            "unit_price_paise": 60000,
+            "tax_rate": "12"
+          }
+        ]
+      }
+    ],
+    "receipts": [
+      {
+        "po_number": "PO-1",
+        "items": [
+          {
+            "line_id": "1",
+            "qty_received": "5"
+          },
+          {
+            "line_id": "2",
+            "qty_received": "4"
+          },
+          {
+            "line_id": "3",
+            "qty_received": "10"
+          }
+        ]
+      }
+    ]
+  },
+  "prior": [],
+  "invoice": {
+    "file": "invoice.jpg",
+    "layout": 3,
+    "messy": "scan",
+    "same_file_as_prior": false,
+    "reading": {
+      "supplier_name": "Bengaluru Bean Roasters Private Limited",
+      "supplier_gstin": "29AABCB4321K1Z8",
+      "invoice_no": "BBR-INV-08029",
+      "invoice_date": "2026-10-05",
+      "po_number": "P.O. No. 001",
+      "items": [
+        {
+          "name": "Arabica beans, medium roast",
+          "qty": "5",
+          "unit": "kg",
+          "unit_price": "1450.00",
+          "tax_rate": "5",
+          "amount": "7250.00"
+        },
+        {
+          "name": "Robusta beans",
+          "qty": "4",
+          "unit": "kg",
+          "unit_price": "980.00",
+          "tax_rate": "5",
+          "amount": "3920.00"
+        },
+        {
+          "name": "Cold brew concentrate",
+          "qty": "10",
+          "unit": "L",
+          "unit_price": "600.00",
+          "tax_rate": "12",
+          "amount": "6000.00"
+        }
+      ],
+      "subtotal": "17170.00",
+      "cgst": null,
+      "sgst": null,
+      "igst": "1278.50",
+      "total": "18448.50",
+      "field_confidence": {
+        "supplier_name": 1.0,
+        "invoice_no": 1.0,
+        "invoice_date": 1.0,
+        "po_number": 1.0,
+        "line_items": 1.0,
+        "totals": 1.0
+      }
+    },
+    "fields": {
+      "supplier_name": "Bengaluru Bean Roasters Private Limited",
+      "supplier_gstin": "29AABCB4321K1Z8",
+      "invoice_no": "BBR-INV-08029",
+      "invoice_date": "2026-10-05",
+      "po_number": "P.O. No. 001",
+      "items": [
+        {
+          "qty": "5",
+          "unit_price_paise": 145000,
+          "tax_rate": "5",
+          "amount_paise": 725000
+        },
+        {
+          "qty": "4",
+          "unit_price_paise": 98000,
+          "tax_rate": "5",
+          "amount_paise": 392000
+        },
+        {
+          "qty": "10",
+          "unit_price_paise": 60000,
+          "tax_rate": "12",
+          "amount_paise": 600000
+        }
+      ],
+      "subtotal_paise": 1717000,
+      "gst_paise": {
+        "cgst": 0,
+        "sgst": 0,
+        "igst": 127850
+      },
+      "total_paise": 1844850
+    }
+  },
+  "expect": {
+    "decision": "auto_approve",
+    "rule": "all_matched",
+    "status": "posted",
+    "po_number": "PO-1",
+    "correct_amount_paise": 1844850,
+    "invoice_total_paise": 1844850,
+    "approve": false,
+    "ledger": [
+      {
+        "invoice_no": "BBR-INV-08029",
+        "amount_paise": 1844850
+      }
+    ],
+    "po_status": {
+      "PO-1": "fully_billed"
+    }
+  }
+}

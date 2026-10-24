@@ -1,0 +1,139 @@
+{
+  "id": "blurry_or_missing_field-03",
+  "kind": "blurry_or_missing_field",
+  "split": "holdout",
+  "description": "Sharma Dairy Pvt Ltd: a stain covers the grand total",
+  "world": {
+    "suppliers": [
+      {
+        "key": "sharma",
+        "name": "Sharma Dairy Pvt Ltd",
+        "email": "accounts@sharmadairy.example.in",
+        "gstin": "27AAPCS1234F1Z5"
+      }
+    ],
+    "purchase_orders": [
+      {
+        "po_number": "PO-1",
+        "supplier": "sharma",
+        "items": [
+          {
+            "name": "White butter",
+            "qty": "2",
+            "unit": "kg",
+            "unit_price_paise": 52000,
+            "tax_rate": "12"
+          },
+          {
+            "name": "Cow ghee",
+            "qty": "2",
+            "unit": "L",
+            "unit_price_paise": 65000,
+            "tax_rate": "12"
+          }
+        ]
+      }
+    ],
+    "receipts": [
+      {
+        "po_number": "PO-1",
+        "items": [
+          {
+            "line_id": "1",
+            "qty_received": "2"
+          },
+          {
+            "line_id": "2",
+            "qty_received": "2"
+          }
+        ]
+      }
+    ]
+  },
+  "prior": [],
+  "invoice": {
+    "file": "invoice.jpg",
+    "layout": 2,
+    "messy": "scan",
+    "same_file_as_prior": false,
+    "reading": {
+      "supplier_name": "Sharma Dairy Pvt. Ltd.",
+      "supplier_gstin": "27AAPCS1234F1Z5",
+      "invoice_no": "SD-2026-1111",
+      "invoice_date": "2026-10-22",
+      "po_number": "PO-1",
+      "items": [
+        {
+          "name": "Butter - white",
+          "qty": "2",
+          "unit": "kg",
+          "unit_price": "520.00",
+          "tax_rate": "12",
+          "amount": "1,040.00"
+        },
+        {
+          "name": "Cow ghee",
+          "qty": "2",
+          "unit": "L",
+          "unit_price": "650.00",
+          "tax_rate": "12",
+          "amount": "1,300.00"
+        }
+      ],
+      "subtotal": "2,340.00",
+      "cgst": "140.40",
+      "sgst": "140.40",
+      "igst": null,
+      "total": null,
+      "field_confidence": {
+        "supplier_name": 1.0,
+        "invoice_no": 1.0,
+        "invoice_date": 1.0,
+        "po_number": 1.0,
+        "line_items": 1.0,
+        "totals": 0.2
+      }
+    },
+    "fields": {
+      "supplier_name": "Sharma Dairy Pvt. Ltd.",
+      "supplier_gstin": "27AAPCS1234F1Z5",
+      "invoice_no": "SD-2026-1111",
+      "invoice_date": "2026-10-22",
+      "po_number": "PO-1",
+      "items": [
+        {
+          "qty": "2",
+          "unit_price_paise": 52000,
+          "tax_rate": "12",
+          "amount_paise": 104000
+        },
+        {
+          "qty": "2",
+          "unit_price_paise": 65000,
+          "tax_rate": "12",
+          "amount_paise": 130000
+        }
+      ],
+      "subtotal_paise": 234000,
+      "gst_paise": {
+        "cgst": 14040,
+        "sgst": 14040,
+        "igst": 0
+      },
+      "total_paise": null
+    }
+  },
+  "expect": {
+    "decision": "needs_review",
+    "rule": null,
+    "status": "needs_review",
+    "po_number": "PO-1",
+    "correct_amount_paise": null,
+    "invoice_total_paise": null,
+    "approve": false,
+    "ledger": [],
+    "po_status": {
+      "PO-1": "open"
+    }
+  }
+}

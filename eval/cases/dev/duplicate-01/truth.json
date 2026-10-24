@@ -1,0 +1,188 @@
+{
+  "id": "duplicate-01",
+  "kind": "duplicate",
+  "split": "dev",
+  "description": "Konkan Fresh Produce LLP: the same file uploaded again",
+  "world": {
+    "suppliers": [
+      {
+        "key": "konkan",
+        "name": "Konkan Fresh Produce LLP",
+        "email": "billing@konkanfresh.example.in",
+        "gstin": "27AAKFK5678M1Z2"
+      }
+    ],
+    "purchase_orders": [
+      {
+        "po_number": "PO-1",
+        "supplier": "konkan",
+        "items": [
+          {
+            "name": "Onions",
+            "qty": "30",
+            "unit": "kg",
+            "unit_price_paise": 2800,
+            "tax_rate": "0"
+          },
+          {
+            "name": "Potatoes",
+            "qty": "20",
+            "unit": "kg",
+            "unit_price_paise": 2400,
+            "tax_rate": "0"
+          }
+        ]
+      }
+    ],
+    "receipts": [
+      {
+        "po_number": "PO-1",
+        "items": [
+          {
+            "line_id": "1",
+            "qty_received": "30"
+          },
+          {
+            "line_id": "2",
+            "qty_received": "20"
+          }
+        ]
+      }
+    ]
+  },
+  "prior": [
+    {
+      "file": "prior-1.pdf",
+      "invoice_no": "KFP/26-27/1349",
+      "reading": {
+        "supplier_name": "Konkan Fresh Produce LLP",
+        "supplier_gstin": "27AAKFK5678M1Z2",
+        "invoice_no": "KFP/26-27/1349",
+        "invoice_date": "2026-10-22",
+        "po_number": "PO-1",
+        "items": [
+          {
+            "name": "Onions",
+            "qty": "30",
+            "unit": "kg",
+            "unit_price": "28.00",
+            "tax_rate": "0%",
+            "amount": "840.00"
+          },
+          {
+            "name": "Potatoes",
+            "qty": "20",
+            "unit": "kg",
+            "unit_price": "24.00",
+            "tax_rate": "0%",
+            "amount": "480.00"
+          }
+        ],
+        "subtotal": "1,320.00",
+        "cgst": "0.00",
+        "sgst": "0.00",
+        "igst": null,
+        "total": "1,320.00",
+        "field_confidence": {
+          "supplier_name": 1.0,
+          "invoice_no": 1.0,
+          "invoice_date": 1.0,
+          "po_number": 1.0,
+          "line_items": 1.0,
+          "totals": 1.0
+        }
+      },
+      "expect_status": "posted"
+    }
+  ],
+  "invoice": {
+    "file": "invoice.pdf",
+    "layout": 1,
+    "messy": null,
+    "same_file_as_prior": true,
+    "reading": {
+      "supplier_name": "Konkan Fresh Produce LLP",
+      "supplier_gstin": "27AAKFK5678M1Z2",
+      "invoice_no": "KFP/26-27/1349",
+      "invoice_date": "2026-10-22",
+      "po_number": "PO-1",
+      "items": [
+        {
+          "name": "Onions",
+          "qty": "30",
+          "unit": "kg",
+          "unit_price": "28.00",
+          "tax_rate": "0%",
+          "amount": "840.00"
+        },
+        {
+          "name": "Potatoes",
+          "qty": "20",
+          "unit": "kg",
+          "unit_price": "24.00",
+          "tax_rate": "0%",
+          "amount": "480.00"
+        }
+      ],
+      "subtotal": "1,320.00",
+      "cgst": "0.00",
+      "sgst": "0.00",
+      "igst": null,
+      "total": "1,320.00",
+      "field_confidence": {
+        "supplier_name": 1.0,
+        "invoice_no": 1.0,
+        "invoice_date": 1.0,
+        "po_number": 1.0,
+        "line_items": 1.0,
+        "totals": 1.0
+      }
+    },
+    "fields": {
+      "supplier_name": "Konkan Fresh Produce LLP",
+      "supplier_gstin": "27AAKFK5678M1Z2",
+      "invoice_no": "KFP/26-27/1349",
+      "invoice_date": "2026-10-22",
+      "po_number": "PO-1",
+      "items": [
+        {
+          "qty": "30",
+          "unit_price_paise": 2800,
+          "tax_rate": "0",
+          "amount_paise": 84000
+        },
+        {
+          "qty": "20",
+          "unit_price_paise": 2400,
+          "tax_rate": "0",
+          "amount_paise": 48000
+        }
+      ],
+      "subtotal_paise": 132000,
+      "gst_paise": {
+        "cgst": 0,
+        "sgst": 0,
+        "igst": 0
+      },
+      "total_paise": 132000
+    }
+  },
+  "expect": {
+    "decision": "block",
+    "rule": "duplicate",
+    "status": "blocked_duplicate",
+    "po_number": "PO-1",
+    "correct_amount_paise": null,
+    "invoice_total_paise": 132000,
+    "approve": false,
+    "ledger": [
+      {
+        "invoice_no": "KFP/26-27/1349",
+        "amount_paise": 132000
+      }
+    ],
+    "po_status": {
+      "PO-1": "fully_billed"
+    }
+  }
+}

@@ -1,0 +1,139 @@
+{
+  "id": "no_matching_po-01",
+  "kind": "no_matching_po",
+  "split": "dev",
+  "description": "Mehta Sugar & Syrups: quotes PO-7, which doesn't exist",
+  "world": {
+    "suppliers": [
+      {
+        "key": "mehta",
+        "name": "Mehta Sugar & Syrups",
+        "email": "billing@mehtasyrups.example.in",
+        "gstin": "24AAJPM2580Q1Z4"
+      }
+    ],
+    "purchase_orders": [
+      {
+        "po_number": "PO-1",
+        "supplier": "mehta",
+        "items": [
+          {
+            "name": "Sugar",
+            "qty": "100",
+            "unit": "kg",
+            "unit_price_paise": 4600,
+            "tax_rate": "5"
+          },
+          {
+            "name": "Caramel syrup 750 ml",
+            "qty": "6",
+            "unit": "bottle",
+            "unit_price_paise": 45000,
+            "tax_rate": "18"
+          }
+        ]
+      }
+    ],
+    "receipts": [
+      {
+        "po_number": "PO-1",
+        "items": [
+          {
+            "line_id": "1",
+            "qty_received": "100"
+          },
+          {
+            "line_id": "2",
+            "qty_received": "6"
+          }
+        ]
+      }
+    ]
+  },
+  "prior": [],
+  "invoice": {
+    "file": "invoice.pdf",
+    "layout": 2,
+    "messy": null,
+    "same_file_as_prior": false,
+    "reading": {
+      "supplier_name": "Mehta Sugar & Syrups",
+      "supplier_gstin": "24AAJPM2580Q1Z4",
+      "invoice_no": "MSS-26-5518",
+      "invoice_date": "2026-10-10",
+      "po_number": "PO-7",
+      "items": [
+        {
+          "name": "Sugar",
+          "qty": "100",
+          "unit": "kg",
+          "unit_price": "46.00",
+          "tax_rate": "5",
+          "amount": "4,600.00"
+        },
+        {
+          "name": "Caramel syrup 750 ml",
+          "qty": "6",
+          "unit": "bottle",
+          "unit_price": "450.00",
+          "tax_rate": "18",
+          "amount": "2,700.00"
+        }
+      ],
+      "subtotal": "7,300.00",
+      "cgst": null,
+      "sgst": null,
+      "igst": "716.00",
+      "total": "8,016.00",
+      "field_confidence": {
+        "supplier_name": 1.0,
+        "invoice_no": 1.0,
+        "invoice_date": 1.0,
+        "po_number": 1.0,
+        "line_items": 1.0,
+        "totals": 1.0
+      }
+    },
+    "fields": {
+      "supplier_name": "Mehta Sugar & Syrups",
+      "supplier_gstin": "24AAJPM2580Q1Z4",
+      "invoice_no": "MSS-26-5518",
+      "invoice_date": "2026-10-10",
+      "po_number": "PO-7",
+      "items": [
+        {
+          "qty": "100",
+          "unit_price_paise": 4600,
+          "tax_rate": "5",
+          "amount_paise": 460000
+        },
+        {
+          "qty": "6",
+          "unit_price_paise": 45000,
+          "tax_rate": "18",
+          "amount_paise": 270000
+        }
+      ],
+      "subtotal_paise": 730000,
+      "gst_paise": {
+        "cgst": 0,
+        "sgst": 0,
+        "igst": 71600
+      },
+      "total_paise": 801600
+    }
+  },
+  "expect": {
+    "decision": "needs_review",
+    "rule": "no_matching_po",
+    "status": "needs_review",
+    "po_number": null,
+    "correct_amount_paise": null,
+    "invoice_total_paise": 801600,
+    "approve": false,
+    "ledger": [],
+    "po_status": {
+      "PO-1": "open"
+    }
+  }
+}

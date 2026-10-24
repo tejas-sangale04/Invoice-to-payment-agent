@@ -1,0 +1,119 @@
+{
+  "id": "perfect_match-01",
+  "kind": "perfect_match",
+  "split": "dev",
+  "description": "Sharma Dairy Pvt Ltd: 1 line(s), all delivered, billed at PO prices",
+  "world": {
+    "suppliers": [
+      {
+        "key": "sharma",
+        "name": "Sharma Dairy Pvt Ltd",
+        "email": "accounts@sharmadairy.example.in",
+        "gstin": "27AAPCS1234F1Z5"
+      }
+    ],
+    "purchase_orders": [
+      {
+        "po_number": "PO-1",
+        "supplier": "sharma",
+        "items": [
+          {
+            "name": "Fresh curd",
+            "qty": "20",
+            "unit": "kg",
+            "unit_price_paise": 9000,
+            "tax_rate": "5"
+          }
+        ]
+      }
+    ],
+    "receipts": [
+      {
+        "po_number": "PO-1",
+        "items": [
+          {
+            "line_id": "1",
+            "qty_received": "20"
+          }
+        ]
+      }
+    ]
+  },
+  "prior": [],
+  "invoice": {
+    "file": "invoice.pdf",
+    "layout": 1,
+    "messy": null,
+    "same_file_as_prior": false,
+    "reading": {
+      "supplier_name": "Sharma Dairy Pvt. Ltd.",
+      "supplier_gstin": "27AAPCS1234F1Z5",
+      "invoice_no": "SD-2026-1724",
+      "invoice_date": "2026-10-13",
+      "po_number": "PO-1",
+      "items": [
+        {
+          "name": "Curd",
+          "qty": "20",
+          "unit": "kg",
+          "unit_price": "90.00",
+          "tax_rate": "5%",
+          "amount": "1,800.00"
+        }
+      ],
+      "subtotal": "1,800.00",
+      "cgst": "45.00",
+      "sgst": "45.00",
+      "igst": null,
+      "total": "1,890.00",
+      "field_confidence": {
+        "supplier_name": 1.0,
+        "invoice_no": 1.0,
+        "invoice_date": 1.0,
+        "po_number": 1.0,
+        "line_items": 1.0,
+        "totals": 1.0
+      }
+    },
+    "fields": {
+      "supplier_name": "Sharma Dairy Pvt. Ltd.",
+      "supplier_gstin": "27AAPCS1234F1Z5",
+      "invoice_no": "SD-2026-1724",
+      "invoice_date": "2026-10-13",
+      "po_number": "PO-1",
+      "items": [
+        {
+          "qty": "20",
+          "unit_price_paise": 9000,
+          "tax_rate": "5",
+          "amount_paise": 180000
+        }
+      ],
+      "subtotal_paise": 180000,
+      "gst_paise": {
+        "cgst": 4500,
+        "sgst": 4500,
+        "igst": 0
+      },
+      "total_paise": 189000
+    }
+  },
+  "expect": {
+    "decision": "auto_approve",
+    "rule": "all_matched",
+    "status": "posted",
+    "po_number": "PO-1",
+    "correct_amount_paise": 189000,
+    "invoice_total_paise": 189000,
+    "approve": false,
+    "ledger": [
+      {
+        "invoice_no": "SD-2026-1724",
+        "amount_paise": 189000
+      }
+    ],
+    "po_status": {
+      "PO-1": "fully_billed"
+    }
+  }
+}

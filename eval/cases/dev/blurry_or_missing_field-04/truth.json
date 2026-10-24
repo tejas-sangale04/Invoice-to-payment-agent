@@ -1,0 +1,144 @@
+{
+  "id": "blurry_or_missing_field-04",
+  "kind": "blurry_or_missing_field",
+  "split": "dev",
+  "description": "Deccan Bakers & Confectioners: a blurry photo, still legible (blur)",
+  "world": {
+    "suppliers": [
+      {
+        "key": "deccan",
+        "name": "Deccan Bakers & Confectioners",
+        "email": "orders@deccanbakers.example.in",
+        "gstin": "27AAQFD1357B1Z9"
+      }
+    ],
+    "purchase_orders": [
+      {
+        "po_number": "PO-1",
+        "supplier": "deccan",
+        "items": [
+          {
+            "name": "Sourdough loaf",
+            "qty": "20",
+            "unit": "pcs",
+            "unit_price_paise": 12000,
+            "tax_rate": "5"
+          },
+          {
+            "name": "Blueberry muffin",
+            "qty": "50",
+            "unit": "pcs",
+            "unit_price_paise": 4000,
+            "tax_rate": "18"
+          }
+        ]
+      }
+    ],
+    "receipts": [
+      {
+        "po_number": "PO-1",
+        "items": [
+          {
+            "line_id": "1",
+            "qty_received": "20"
+          },
+          {
+            "line_id": "2",
+            "qty_received": "50"
+          }
+        ]
+      }
+    ]
+  },
+  "prior": [],
+  "invoice": {
+    "file": "invoice.jpg",
+    "layout": 2,
+    "messy": "blur",
+    "same_file_as_prior": false,
+    "reading": {
+      "supplier_name": "Deccan Bakers & Confectioners",
+      "supplier_gstin": "27AAQFD1357B1Z9",
+      "invoice_no": "DBC 7936",
+      "invoice_date": "2026-10-11",
+      "po_number": "PO-1",
+      "items": [
+        {
+          "name": "Sourdough loaf",
+          "qty": "20",
+          "unit": "pcs",
+          "unit_price": "120.00",
+          "tax_rate": "5",
+          "amount": "2,400.00"
+        },
+        {
+          "name": "Blueberry muffin",
+          "qty": "50",
+          "unit": "pcs",
+          "unit_price": "40.00",
+          "tax_rate": "18",
+          "amount": "2,000.00"
+        }
+      ],
+      "subtotal": "4,400.00",
+      "cgst": "240.00",
+      "sgst": "240.00",
+      "igst": null,
+      "total": "4,880.00",
+      "field_confidence": {
+        "supplier_name": 1.0,
+        "invoice_no": 1.0,
+        "invoice_date": 1.0,
+        "po_number": 1.0,
+        "line_items": 1.0,
+        "totals": 1.0
+      }
+    },
+    "fields": {
+      "supplier_name": "Deccan Bakers & Confectioners",
+      "supplier_gstin": "27AAQFD1357B1Z9",
+      "invoice_no": "DBC 7936",
+      "invoice_date": "2026-10-11",
+      "po_number": "PO-1",
+      "items": [
+        {
+          "qty": "20",
+          "unit_price_paise": 12000,
+          "tax_rate": "5",
+          "amount_paise": 240000
+        },
+        {
+          "qty": "50",
+          "unit_price_paise": 4000,
+          "tax_rate": "18",
+          "amount_paise": 200000
+        }
+      ],
+      "subtotal_paise": 440000,
+      "gst_paise": {
+        "cgst": 24000,
+        "sgst": 24000,
+        "igst": 0
+      },
+      "total_paise": 488000
+    }
+  },
+  "expect": {
+    "decision": "auto_approve",
+    "rule": "all_matched",
+    "status": "posted",
+    "po_number": "PO-1",
+    "correct_amount_paise": 488000,
+    "invoice_total_paise": 488000,
+    "approve": false,
+    "ledger": [
+      {
+        "invoice_no": "DBC 7936",
+        "amount_paise": 488000
+      }
+    ],
+    "po_status": {
+      "PO-1": "fully_billed"
+    }
+  }
+}

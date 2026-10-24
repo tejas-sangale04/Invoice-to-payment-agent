@@ -17,7 +17,8 @@ The full specification and build plan is in [PROJECT_CONTEXT.md](PROJECT_CONTEXT
 | 6 | Approval and posting: approval queue, separation of duties, one-time ledger posting, PO billing | Done |
 | 7 | Agentic exceptions: Resolution Agent for missing PO numbers, Explanation Agent with number check and template fallback | Done |
 | 8 | Dashboard and observability: metrics, JSON logs with invoice id and step, trace spans, per-step timing, AI cost | Done |
-| 9 to 10 | Evaluation, deployment | Not started |
+| 9 | Evaluation: 60-case test set with 4 layouts and scan-like copies, harness, report, failure-injection tests | Done |
+| 10 | Deployment and docs | Not started |
 
 Every screen is now live. `frontend/src/lib/features.ts` still holds a flag per screen.
 
@@ -45,6 +46,7 @@ Every screen is now live. `frontend/src/lib/features.ts` still holds a flag per 
 - With `EXCEPTION_AGENTS=disabled` (or `EXTRACTOR=disabled`) the template is used and invoices without a PO number go to a person.
 - The manager dashboard (`GET /dashboard/metrics`) is worked out from the stored invoices and ledger: invoices processed, the decision breakdown, amount posted, overcharges caught (on held invoices, and the part above the PO price on invoices paid at the PO price), duplicates blocked, average time from upload to decision and per pipeline step, retries, and model calls, tokens and Gemini time per invoice. AI cost is the recorded tokens at the prices in `GEMINI_INPUT_USD_PER_MTOK`, `GEMINI_OUTPUT_USD_PER_MTOK` and `USD_TO_INR` (defaults: Gemini 2.5 Flash list prices and Rs 88 per $); change them to your own.
 - Every log line from the pipeline is JSON with the `invoice_id` and `step`, including lines from the agents. Each pipeline step runs in an OpenTelemetry span (`pipeline.extract` and so on), which is a no-op until an exporter such as Cloud Trace is set up in Phase 10.
+- The evaluation harness (`eval/`) runs 60 generated invoices (dev and held-out splits) through the real app and reports decision accuracy, a confusion matrix, wrong approvals, duplicates paid, ledger and PO end state, extraction accuracy per field, explanation checks with an LLM judge, consistency over 3 runs, latency and cost, plus 8 failure-injection tests. See [eval/README.md](eval/README.md).
 - Posting is one Firestore transaction: it creates `ledger_entries/{supplier_id}_{invoice_no}`, adds the billed quantities to the PO (open → partially billed → fully billed) and moves the invoice to `posted`. If that key is already in the ledger nothing is posted, so an invoice is paid once even if two copies are approved at the same moment (there is an emulator test for that). The amount posted is the correct amount, at no more than the PO price.
 
 ## Background processing and file storage
@@ -64,6 +66,7 @@ Every screen is now live. `frontend/src/lib/features.ts` still holds a flag per 
 ```
 backend/    FastAPI app (app/api, app/agents, app/pipeline, app/models, app/services, app/core), pytest
 frontend/   React + Vite + TypeScript, Tailwind CSS, shadcn/ui, TanStack Query, React Router, Firebase Auth
+eval/       Evaluation: case generator, 60 cases (dev/holdout), harness, reports
 firebase.json   Local Firebase Auth and Firestore emulators
 ```
 
@@ -108,7 +111,17 @@ firebase emulators:exec --only auth,firestore "cd backend && pytest -m emulator"
 cd frontend && npm run lint && npm test && npm run build
 ```
 
-CI (`.github/workflows/ci.yml`) runs all of the above plus both Docker builds.
+CI (`.github/workflows/ci.yml`) runs all of the above, the evaluation with ground-truth stand-ins (`pytest eval --runs 1`), and both Docker builds.
+
+## Evaluation
+
+```bash
+pip install -r eval/requirements.txt          # from the repo root, backend venv active
+pytest eval --report --agents gemini          # real Gemini (needs EXTRACTOR=gemini in backend/.env)
+pytest eval --report                          # no Gemini: checks everything after reading
+```
+
+Needs the emulators running; the report lands in `eval/reports/`. Accuracy, latency and cost figures come only from a `--agents gemini` run. Details in [eval/README.md](eval/README.md).
 
 ## Deploy
 

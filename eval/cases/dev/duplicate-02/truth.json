@@ -1,0 +1,188 @@
+{
+  "id": "duplicate-02",
+  "kind": "duplicate",
+  "split": "dev",
+  "description": "Surat Packaging Industries: the same file uploaded again",
+  "world": {
+    "suppliers": [
+      {
+        "key": "surat",
+        "name": "Surat Packaging Industries",
+        "email": "sales@suratpack.example.in",
+        "gstin": "24AAGFS8765P1Z3"
+      }
+    ],
+    "purchase_orders": [
+      {
+        "po_number": "PO-1",
+        "supplier": "surat",
+        "items": [
+          {
+            "name": "Paper cups 250 ml",
+            "qty": "1000",
+            "unit": "pcs",
+            "unit_price_paise": 240,
+            "tax_rate": "18"
+          },
+          {
+            "name": "Kraft paper bags",
+            "qty": "500",
+            "unit": "pcs",
+            "unit_price_paise": 450,
+            "tax_rate": "18"
+          }
+        ]
+      }
+    ],
+    "receipts": [
+      {
+        "po_number": "PO-1",
+        "items": [
+          {
+            "line_id": "1",
+            "qty_received": "1000"
+          },
+          {
+            "line_id": "2",
+            "qty_received": "500"
+          }
+        ]
+      }
+    ]
+  },
+  "prior": [
+    {
+      "file": "prior-1.pdf",
+      "invoice_no": "SPI/2026/1659",
+      "reading": {
+        "supplier_name": "Surat Packaging Industries",
+        "supplier_gstin": "24AAGFS8765P1Z3",
+        "invoice_no": "SPI/2026/1659",
+        "invoice_date": "2026-10-13",
+        "po_number": "PO-1",
+        "items": [
+          {
+            "name": "Paper cups 250 ml",
+            "qty": "1000",
+            "unit": "pcs",
+            "unit_price": "2.40",
+            "tax_rate": "18",
+            "amount": "2,400.00"
+          },
+          {
+            "name": "Kraft paper bags",
+            "qty": "500",
+            "unit": "pcs",
+            "unit_price": "4.50",
+            "tax_rate": "18",
+            "amount": "2,250.00"
+          }
+        ],
+        "subtotal": "4,650.00",
+        "cgst": null,
+        "sgst": null,
+        "igst": "837.00",
+        "total": "5,487.00",
+        "field_confidence": {
+          "supplier_name": 1.0,
+          "invoice_no": 1.0,
+          "invoice_date": 1.0,
+          "po_number": 1.0,
+          "line_items": 1.0,
+          "totals": 1.0
+        }
+      },
+      "expect_status": "posted"
+    }
+  ],
+  "invoice": {
+    "file": "invoice.pdf",
+    "layout": 2,
+    "messy": null,
+    "same_file_as_prior": true,
+    "reading": {
+      "supplier_name": "Surat Packaging Industries",
+      "supplier_gstin": "24AAGFS8765P1Z3",
+      "invoice_no": "SPI/2026/1659",
+      "invoice_date": "2026-10-13",
+      "po_number": "PO-1",
+      "items": [
+        {
+          "name": "Paper cups 250 ml",
+          "qty": "1000",
+          "unit": "pcs",
+          "unit_price": "2.40",
+          "tax_rate": "18",
+          "amount": "2,400.00"
+        },
+        {
+          "name": "Kraft paper bags",
+          "qty": "500",
+          "unit": "pcs",
+          "unit_price": "4.50",
+          "tax_rate": "18",
+          "amount": "2,250.00"
+        }
+      ],
+      "subtotal": "4,650.00",
+      "cgst": null,
+      "sgst": null,
+      "igst": "837.00",
+      "total": "5,487.00",
+      "field_confidence": {
+        "supplier_name": 1.0,
+        "invoice_no": 1.0,
+        "invoice_date": 1.0,
+        "po_number": 1.0,
+        "line_items": 1.0,
+        "totals": 1.0
+      }
+    },
+    "fields": {
+      "supplier_name": "Surat Packaging Industries",
+      "supplier_gstin": "24AAGFS8765P1Z3",
+      "invoice_no": "SPI/2026/1659",
+      "invoice_date": "2026-10-13",
+      "po_number": "PO-1",
+      "items": [
+        {
+          "qty": "1000",
+          "unit_price_paise": 240,
+          "tax_rate": "18",
+          "amount_paise": 240000
+        },
+        {
+          "qty": "500",
+          "unit_price_paise": 450,
+          "tax_rate": "18",
+          "amount_paise": 225000
+        }
+      ],
+      "subtotal_paise": 465000,
+      "gst_paise": {
+        "cgst": 0,
+        "sgst": 0,
+        "igst": 83700
+      },
+      "total_paise": 548700
+    }
+  },
+  "expect": {
+    "decision": "block",
+    "rule": "duplicate",
+    "status": "blocked_duplicate",
+    "po_number": "PO-1",
+    "correct_amount_paise": null,
+    "invoice_total_paise": 548700,
+    "approve": false,
+    "ledger": [
+      {
+        "invoice_no": "SPI/2026/1659",
+        "amount_paise": 548700
+      }
+    ],
+    "po_status": {
+      "PO-1": "fully_billed"
+    }
+  }
+}

@@ -1,0 +1,219 @@
+{
+  "id": "gst_layouts-08",
+  "kind": "gst_layouts",
+  "split": "dev",
+  "description": "Sharma Dairy Pvt Ltd: 5 lines, GST 0%, 12%, 5% as CGST + SGST",
+  "world": {
+    "suppliers": [
+      {
+        "key": "sharma",
+        "name": "Sharma Dairy Pvt Ltd",
+        "email": "accounts@sharmadairy.example.in",
+        "gstin": "27AAPCS1234F1Z5"
+      }
+    ],
+    "purchase_orders": [
+      {
+        "po_number": "PO-1",
+        "supplier": "sharma",
+        "items": [
+          {
+            "name": "Full cream milk",
+            "qty": "40",
+            "unit": "L",
+            "unit_price_paise": 6000,
+            "tax_rate": "0"
+          },
+          {
+            "name": "Paneer",
+            "qty": "2.5",
+            "unit": "kg",
+            "unit_price_paise": 40000,
+            "tax_rate": "5"
+          },
+          {
+            "name": "White butter",
+            "qty": "5",
+            "unit": "kg",
+            "unit_price_paise": 52000,
+            "tax_rate": "12"
+          },
+          {
+            "name": "Fresh curd",
+            "qty": "10",
+            "unit": "kg",
+            "unit_price_paise": 9000,
+            "tax_rate": "5"
+          },
+          {
+            "name": "Cow ghee",
+            "qty": "2",
+            "unit": "L",
+            "unit_price_paise": 65000,
+            "tax_rate": "12"
+          }
+        ]
+      }
+    ],
+    "receipts": [
+      {
+        "po_number": "PO-1",
+        "items": [
+          {
+            "line_id": "1",
+            "qty_received": "40"
+          },
+          {
+            "line_id": "2",
+            "qty_received": "2.5"
+          },
+          {
+            "line_id": "3",
+            "qty_received": "5"
+          },
+          {
+            "line_id": "4",
+            "qty_received": "10"
+          },
+          {
+            "line_id": "5",
+            "qty_received": "2"
+          }
+        ]
+      }
+    ]
+  },
+  "prior": [],
+  "invoice": {
+    "file": "invoice.pdf",
+    "layout": 4,
+    "messy": null,
+    "same_file_as_prior": false,
+    "reading": {
+      "supplier_name": "Sharma Dairy Pvt. Ltd.",
+      "supplier_gstin": "27AAPCS1234F1Z5",
+      "invoice_no": "SD-2026-9573",
+      "invoice_date": "2026-10-01",
+      "po_number": "PO-1",
+      "items": [
+        {
+          "name": "Milk (full cream)",
+          "qty": "40",
+          "unit": "L",
+          "unit_price": "60.00",
+          "tax_rate": "0",
+          "amount": "2,400.00"
+        },
+        {
+          "name": "Paneer",
+          "qty": "2.5",
+          "unit": "kg",
+          "unit_price": "400.00",
+          "tax_rate": "5",
+          "amount": "1,000.00"
+        },
+        {
+          "name": "Butter - white",
+          "qty": "5",
+          "unit": "kg",
+          "unit_price": "520.00",
+          "tax_rate": "12",
+          "amount": "2,600.00"
+        },
+        {
+          "name": "Curd",
+          "qty": "10",
+          "unit": "kg",
+          "unit_price": "90.00",
+          "tax_rate": "5",
+          "amount": "900.00"
+        },
+        {
+          "name": "Cow ghee",
+          "qty": "2",
+          "unit": "L",
+          "unit_price": "650.00",
+          "tax_rate": "12",
+          "amount": "1,300.00"
+        }
+      ],
+      "subtotal": "8,200.00",
+      "cgst": "281.50",
+      "sgst": "281.50",
+      "igst": null,
+      "total": "8,763.00",
+      "field_confidence": {
+        "supplier_name": 1.0,
+        "invoice_no": 1.0,
+        "invoice_date": 1.0,
+        "po_number": 1.0,
+        "line_items": 1.0,
+        "totals": 1.0
+      }
+    },
+    "fields": {
+      "supplier_name": "Sharma Dairy Pvt. Ltd.",
+      "supplier_gstin": "27AAPCS1234F1Z5",
+      "invoice_no": "SD-2026-9573",
+      "invoice_date": "2026-10-01",
+      "po_number": "PO-1",
+      "items": [
+        {
+          "qty": "40",
+          "unit_price_paise": 6000,
+          "tax_rate": "0",
+          "amount_paise": 240000
+        },
+        {
+          "qty": "2.5",
+          "unit_price_paise": 40000,
+          "tax_rate": "5",
+          "amount_paise": 100000
+        },
+        {
+          "qty": "5",
+          "unit_price_paise": 52000,
+          "tax_rate": "12",
+          "amount_paise": 260000
+        },
+        {
+          "qty": "10",
+          "unit_price_paise": 9000,
+          "tax_rate": "5",
+          "amount_paise": 90000
+        },
+        {
+          "qty": "2",
+          "unit_price_paise": 65000,
+          "tax_rate": "12",
+          "amount_paise": 130000
+        }
+      ],
+      "subtotal_paise": 820000,
+      "gst_paise": {
+        "cgst": 28150,
+        "sgst": 28150,
+        "igst": 0
+      },
+      "total_paise": 876300
+    }
+  },
+  "expect": {
+    "decision": "auto_approve",
+    "rule": "all_matched",
+    "status": "posted",
+    "po_number": "PO-1",
+    "correct_amount_paise": 876300,
+    "invoice_total_paise": 876300,
+    "approve": false,
+    "ledger": [
+      {
+        "invoice_no": "SD-2026-9573",
+        "amount_paise": 876300
+      }
+    ],
+    "po_status": {
+      "PO-1": "fully_billed"
+    }
+  }
+}

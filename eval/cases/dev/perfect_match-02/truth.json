@@ -1,0 +1,144 @@
+{
+  "id": "perfect_match-02",
+  "kind": "perfect_match",
+  "split": "dev",
+  "description": "Konkan Fresh Produce LLP: 2 line(s), all delivered, billed at PO prices",
+  "world": {
+    "suppliers": [
+      {
+        "key": "konkan",
+        "name": "Konkan Fresh Produce LLP",
+        "email": "billing@konkanfresh.example.in",
+        "gstin": "27AAKFK5678M1Z2"
+      }
+    ],
+    "purchase_orders": [
+      {
+        "po_number": "PO-1",
+        "supplier": "konkan",
+        "items": [
+          {
+            "name": "Tomatoes",
+            "qty": "20",
+            "unit": "kg",
+            "unit_price_paise": 3200,
+            "tax_rate": "0"
+          },
+          {
+            "name": "Onions",
+            "qty": "50",
+            "unit": "kg",
+            "unit_price_paise": 2800,
+            "tax_rate": "0"
+          }
+        ]
+      }
+    ],
+    "receipts": [
+      {
+        "po_number": "PO-1",
+        "items": [
+          {
+            "line_id": "1",
+            "qty_received": "20"
+          },
+          {
+            "line_id": "2",
+            "qty_received": "50"
+          }
+        ]
+      }
+    ]
+  },
+  "prior": [],
+  "invoice": {
+    "file": "invoice.pdf",
+    "layout": 2,
+    "messy": null,
+    "same_file_as_prior": false,
+    "reading": {
+      "supplier_name": "Konkan Fresh Produce LLP",
+      "supplier_gstin": "27AAKFK5678M1Z2",
+      "invoice_no": "KFP/26-27/6281",
+      "invoice_date": "2026-10-06",
+      "po_number": "PO 1",
+      "items": [
+        {
+          "name": "Tomatoes",
+          "qty": "20",
+          "unit": "kg",
+          "unit_price": "32.00",
+          "tax_rate": "0",
+          "amount": "640.00"
+        },
+        {
+          "name": "Onions",
+          "qty": "50",
+          "unit": "kg",
+          "unit_price": "28.00",
+          "tax_rate": "0",
+          "amount": "1,400.00"
+        }
+      ],
+      "subtotal": "2,040.00",
+      "cgst": "0.00",
+      "sgst": "0.00",
+      "igst": null,
+      "total": "2,040.00",
+      "field_confidence": {
+        "supplier_name": 1.0,
+        "invoice_no": 1.0,
+        "invoice_date": 1.0,
+        "po_number": 1.0,
+        "line_items": 1.0,
+        "totals": 1.0
+      }
+    },
+    "fields": {
+      "supplier_name": "Konkan Fresh Produce LLP",
+      "supplier_gstin": "27AAKFK5678M1Z2",
+      "invoice_no": "KFP/26-27/6281",
+      "invoice_date": "2026-10-06",
+      "po_number": "PO 1",
+      "items": [
+        {
+          "qty": "20",
+          "unit_price_paise": 3200,
+          "tax_rate": "0",
+          "amount_paise": 64000
+        },
+        {
+          "qty": "50",
+          "unit_price_paise": 2800,
+          "tax_rate": "0",
+          "amount_paise": 140000
+        }
+      ],
+      "subtotal_paise": 204000,
+      "gst_paise": {
+        "cgst": 0,
+        "sgst": 0,
+        "igst": 0
+      },
+      "total_paise": 204000
+    }
+  },
+  "expect": {
+    "decision": "auto_approve",
+    "rule": "all_matched",
+    "status": "posted",
+    "po_number": "PO-1",
+    "correct_amount_paise": 204000,
+    "invoice_total_paise": 204000,
+    "approve": false,
+    "ledger": [
+      {
+        "invoice_no": "KFP/26-27/6281",
+        "amount_paise": 204000
+      }
+    ],
+    "po_status": {
+      "PO-1": "fully_billed"
+    }
+  }
+}

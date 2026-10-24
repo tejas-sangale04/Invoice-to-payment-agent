@@ -1,0 +1,164 @@
+{
+  "id": "price_overcharge-06",
+  "kind": "price_overcharge",
+  "split": "holdout",
+  "description": "Surat Packaging Industries: Kraft paper bags billed 50% above the PO price",
+  "world": {
+    "suppliers": [
+      {
+        "key": "surat",
+        "name": "Surat Packaging Industries",
+        "email": "sales@suratpack.example.in",
+        "gstin": "24AAGFS8765P1Z3"
+      }
+    ],
+    "purchase_orders": [
+      {
+        "po_number": "PO-1",
+        "supplier": "surat",
+        "items": [
+          {
+            "name": "Paper cups 250 ml",
+            "qty": "2000",
+            "unit": "pcs",
+            "unit_price_paise": 240,
+            "tax_rate": "18"
+          },
+          {
+            "name": "Cup lids",
+            "qty": "3000",
+            "unit": "pcs",
+            "unit_price_paise": 110,
+            "tax_rate": "18"
+          },
+          {
+            "name": "Kraft paper bags",
+            "qty": "1000",
+            "unit": "pcs",
+            "unit_price_paise": 450,
+            "tax_rate": "18"
+          }
+        ]
+      }
+    ],
+    "receipts": [
+      {
+        "po_number": "PO-1",
+        "items": [
+          {
+            "line_id": "1",
+            "qty_received": "2000"
+          },
+          {
+            "line_id": "2",
+            "qty_received": "3000"
+          },
+          {
+            "line_id": "3",
+            "qty_received": "1000"
+          }
+        ]
+      }
+    ]
+  },
+  "prior": [],
+  "invoice": {
+    "file": "invoice.pdf",
+    "layout": 4,
+    "messy": null,
+    "same_file_as_prior": false,
+    "reading": {
+      "supplier_name": "Surat Packaging Industries",
+      "supplier_gstin": "24AAGFS8765P1Z3",
+      "invoice_no": "SPI/2026/3718",
+      "invoice_date": "2026-10-19",
+      "po_number": "PO-1",
+      "items": [
+        {
+          "name": "Paper cups 250 ml",
+          "qty": "2000",
+          "unit": "pcs",
+          "unit_price": "2.40",
+          "tax_rate": "18",
+          "amount": "4,800.00"
+        },
+        {
+          "name": "Cup lids",
+          "qty": "3000",
+          "unit": "pcs",
+          "unit_price": "1.10",
+          "tax_rate": "18",
+          "amount": "3,300.00"
+        },
+        {
+          "name": "Kraft paper bags",
+          "qty": "1000",
+          "unit": "pcs",
+          "unit_price": "6.75",
+          "tax_rate": "18",
+          "amount": "6,750.00"
+        }
+      ],
+      "subtotal": "14,850.00",
+      "cgst": null,
+      "sgst": null,
+      "igst": "2,673.00",
+      "total": "17,523.00",
+      "field_confidence": {
+        "supplier_name": 1.0,
+        "invoice_no": 1.0,
+        "invoice_date": 1.0,
+        "po_number": 1.0,
+        "line_items": 1.0,
+        "totals": 1.0
+      }
+    },
+    "fields": {
+      "supplier_name": "Surat Packaging Industries",
+      "supplier_gstin": "24AAGFS8765P1Z3",
+      "invoice_no": "SPI/2026/3718",
+      "invoice_date": "2026-10-19",
+      "po_number": "PO-1",
+      "items": [
+        {
+          "qty": "2000",
+          "unit_price_paise": 240,
+          "tax_rate": "18",
+          "amount_paise": 480000
+        },
+        {
+          "qty": "3000",
+          "unit_price_paise": 110,
+          "tax_rate": "18",
+          "amount_paise": 330000
+        },
+        {
+          "qty": "1000",
+          "unit_price_paise": 675,
+          "tax_rate": "18",
+          "amount_paise": 675000
+        }
+      ],
+      "subtotal_paise": 1485000,
+      "gst_paise": {
+        "cgst": 0,
+        "sgst": 0,
+        "igst": 267300
+      },
+      "total_paise": 1752300
+    }
+  },
+  "expect": {
+    "decision": "hold",
+    "rule": "price_over_tolerance",
+    "status": "on_hold",
+    "po_number": "PO-1",
+    "correct_amount_paise": 1486800,
+    "invoice_total_paise": 1752300,
+    "approve": false,
+    "ledger": [],
+    "po_status": {
+      "PO-1": "open"
+    }
+  }
+}

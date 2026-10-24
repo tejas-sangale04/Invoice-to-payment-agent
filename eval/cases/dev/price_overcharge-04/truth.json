@@ -1,0 +1,114 @@
+{
+  "id": "price_overcharge-04",
+  "kind": "price_overcharge",
+  "split": "dev",
+  "description": "Konkan Fresh Produce LLP: Tomatoes billed 25% above the PO price",
+  "world": {
+    "suppliers": [
+      {
+        "key": "konkan",
+        "name": "Konkan Fresh Produce LLP",
+        "email": "billing@konkanfresh.example.in",
+        "gstin": "27AAKFK5678M1Z2"
+      }
+    ],
+    "purchase_orders": [
+      {
+        "po_number": "PO-1",
+        "supplier": "konkan",
+        "items": [
+          {
+            "name": "Tomatoes",
+            "qty": "25",
+            "unit": "kg",
+            "unit_price_paise": 3200,
+            "tax_rate": "0"
+          }
+        ]
+      }
+    ],
+    "receipts": [
+      {
+        "po_number": "PO-1",
+        "items": [
+          {
+            "line_id": "1",
+            "qty_received": "25"
+          }
+        ]
+      }
+    ]
+  },
+  "prior": [],
+  "invoice": {
+    "file": "invoice.jpg",
+    "layout": 2,
+    "messy": "scan",
+    "same_file_as_prior": false,
+    "reading": {
+      "supplier_name": "Konkan Fresh Produce LLP",
+      "supplier_gstin": "27AAKFK5678M1Z2",
+      "invoice_no": "KFP/26-27/6480",
+      "invoice_date": "2026-10-11",
+      "po_number": "PO-1",
+      "items": [
+        {
+          "name": "Tomatoes",
+          "qty": "25",
+          "unit": "kg",
+          "unit_price": "40.00",
+          "tax_rate": "0",
+          "amount": "1,000.00"
+        }
+      ],
+      "subtotal": "1,000.00",
+      "cgst": "0.00",
+      "sgst": "0.00",
+      "igst": null,
+      "total": "1,000.00",
+      "field_confidence": {
+        "supplier_name": 1.0,
+        "invoice_no": 1.0,
+        "invoice_date": 1.0,
+        "po_number": 1.0,
+        "line_items": 1.0,
+        "totals": 1.0
+      }
+    },
+    "fields": {
+      "supplier_name": "Konkan Fresh Produce LLP",
+      "supplier_gstin": "27AAKFK5678M1Z2",
+      "invoice_no": "KFP/26-27/6480",
+      "invoice_date": "2026-10-11",
+      "po_number": "PO-1",
+      "items": [
+        {
+          "qty": "25",
+          "unit_price_paise": 4000,
+          "tax_rate": "0",
+          "amount_paise": 100000
+        }
+      ],
+      "subtotal_paise": 100000,
+      "gst_paise": {
+        "cgst": 0,
+        "sgst": 0,
+        "igst": 0
+      },
+      "total_paise": 100000
+    }
+  },
+  "expect": {
+    "decision": "hold",
+    "rule": "price_over_tolerance",
+    "status": "on_hold",
+    "po_number": "PO-1",
+    "correct_amount_paise": 80000,
+    "invoice_total_paise": 100000,
+    "approve": false,
+    "ledger": [],
+    "po_status": {
+      "PO-1": "open"
+    }
+  }
+}
