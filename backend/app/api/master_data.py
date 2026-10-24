@@ -11,6 +11,7 @@ from app.models.master_data import (
     PurchaseOrderUpdate,
     Supplier,
     SupplierCreate,
+    SupplierUpdate,
 )
 from app.models.user import CurrentUser, Role
 from app.services import master_data as svc
@@ -26,6 +27,13 @@ Admin = Depends(require_role(Role.admin))
 @router.post("/suppliers", response_model=Supplier, status_code=201, tags=["suppliers"])
 def create_supplier(body: SupplierCreate, db: Db, _: CurrentUser = Admin) -> Supplier:
     return svc.create_supplier(db, body)
+
+
+@router.put("/suppliers/{supplier_id}", response_model=Supplier, tags=["suppliers"])
+def update_supplier(
+    supplier_id: str, body: SupplierUpdate, db: Db, _: CurrentUser = Admin
+) -> Supplier:
+    return svc.update_supplier(db, supplier_id, body)
 
 
 @router.get("/suppliers", response_model=Page[Supplier], tags=["suppliers"])
