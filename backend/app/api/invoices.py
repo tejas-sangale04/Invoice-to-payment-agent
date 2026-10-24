@@ -100,6 +100,12 @@ def get_invoice_file(
     )
 
 
+@router.delete("/invoices/{invoice_id}", status_code=204)
+def delete_invoice(invoice_id: str, db: Db, user: CurrentUser = Manager) -> None:
+    """Delete an invoice that was never posted, so a corrected copy can be uploaded."""
+    svc.delete_invoice(db, invoice_id, user)
+
+
 @router.post("/invoices/{invoice_id}/reprocess", response_model=Invoice)
 def reprocess_invoice(
     invoice_id: str, db: Db, background: BackgroundTasks, user: CurrentUser = Manager

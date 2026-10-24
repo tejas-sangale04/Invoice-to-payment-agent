@@ -1,18 +1,19 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Plus, Trash2 } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
 
 import { PageHeader } from '@/components/PageHeader'
-import { ErrorState } from '@/components/States'
+import { ErrorState, LoadingState } from '@/components/States'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { NativeSelect } from '@/components/ui/native-select'
-import { createPurchaseOrder, listSuppliers } from '@/lib/api'
+import { createPurchaseOrder, getPurchaseOrder, type POItemInput, listSuppliers, updatePurchaseOrder } from '@/lib/api'
 import { formatPaise, lineAmounts, rupeesToPaise } from '@/lib/format'
+import type { PurchaseOrder } from '@/lib/types'
 
 const GST_RATES = ['0', '5', '12', '18', '28']
 
@@ -28,20 +29,35 @@ interface Line {
 let nextKey = 1
 const blankLine = (): Line => ({ key: nextKey++, name: '', qty: '', unit: '', price: '', tax_rate: '0' })
 
+/** New PO, or (at /purchase-orders/:poNumber/edit) the lines of an existing one. */
 export function CreatePurchaseOrderPage() {
+  const { poNumber } = useParams()
+  const existing = useQuery({ queryKey: ['purchase-order', poNumber], queryFn: () => getPurchaseOrder(poNumber!), enabled: !!poNumber })
+  if (poNumber && existing.isPending) return <LoadingState />
+  if (poNumber && existing.isError) return <ErrorState error={existing.error} />
+  return <PurchaseOrderForm po={existing.data} />
+}
+
+function PurchaseOrderForm({ po }: { po?: PurchaseOrder }) {
   const navigate = useNavigate()
   const qc = useQueryClient()
   const suppliers = useQuery({ queryKey: ['suppliers'], queryFn: () => listSuppliers() })
-  const [supplierId, setSupplierId] = useState('')
-  const [lines, setLines] = useState<Line[]>([blankLine()])
+  const [supplierId, setSupplierId] = useState(po?.supplier_id ?? '')
+  const [lines, setLines] = useState<Line[]>(() =>
+    po
+      ? po.items.map((l) => ({ key: nextKey++, name: l.name, qty: l.qty, unit: l.unit, price: (l.unit_price_paise / 100).toFixed(2), tax_rate: String(Number(l.tax_rate)) }))
+      : [blankLine()],
+  )
   const [formError, setFormError] = useState<string | null>(null)
 
   const mutation = useMutation({
-    mutationFn: createPurchaseOrder,
-    onSuccess: (po) => {
-      toast.success(`${po.po_number} created`)
+    mutationFn: (body: { supplier_id: string; items: POItemInput[] }) =>
+      po ? updatePurchaseOrder(po.po_number, body.items) : createPurchaseOrder(body),
+    onSuccess: (saved) => {
+      toast.success(`${saved.po_number} ${po ? 'updated' : 'created'}`)
       qc.invalidateQueries({ queryKey: ['purchase-orders'] })
-      navigate(`/purchase-orders/${po.po_number}`)
+      qc.invalidateQueries({ queryKey: ['purchase-order', saved.po_number] })
+      navigate(`/purchase-orders/${saved.po_number}`)
     },
   })
 
@@ -70,7 +86,10 @@ export function CreatePurchaseOrderPage() {
 
   return (
     <>
-      <PageHeader title="New purchase order" description="Record what you're ordering and at what price." />
+      <PageHeader
+        title={po ? `Edit ${po.po_number}` : 'New purchase order'}
+        description={po ? 'Change what is ordered. Not possible once an invoice has been posted against it.' : "Record what you're ordering and at what price."}
+      />
       <form onSubmit={onSubmit}>
         <Card>
           <CardHeader>
@@ -79,7 +98,7 @@ export function CreatePurchaseOrderPage() {
           <CardContent>
             <div className="grid max-w-md gap-2">
               <Label htmlFor="supplier">Supplier</Label>
-              <NativeSelect id="supplier" required value={supplierId} onChange={(e) => setSupplierId(e.target.value)} disabled={suppliers.isPending}>
+              <NativeSelect id="supplier" required value={supplierId} onChange={(e) => setSupplierId(e.target.value)} disabled={suppliers.isPending || !!po}>
                 <option value="">{suppliers.isPending ? 'Loading suppliers…' : 'Choose a supplier'}</option>
                 {suppliers.data?.items.map((s) => (
                   <option key={s.supplier_id} value={s.supplier_id}>
@@ -147,10 +166,10 @@ export function CreatePurchaseOrderPage() {
             </dl>
             <div className="flex gap-2">
               <Button type="button" variant="ghost" asChild>
-                <Link to="/purchase-orders">Cancel</Link>
+                <Link to={po ? `/purchase-orders/${po.po_number}` : '/purchase-orders'}>Cancel</Link>
               </Button>
               <Button type="submit" disabled={mutation.isPending}>
-                {mutation.isPending ? 'Creating…' : 'Create purchase order'}
+                {mutation.isPending ? 'Saving…' : po ? 'Save changes' : 'Create purchase order'}
               </Button>
             </div>
           </CardFooter>

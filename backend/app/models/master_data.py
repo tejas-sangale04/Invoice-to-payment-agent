@@ -65,6 +65,13 @@ class PurchaseOrderCreate(BaseModel):
     items: list[POItemCreate] = Field(min_length=1, max_length=100)
 
 
+class PurchaseOrderUpdate(BaseModel):
+    """The new lines of a PO. The supplier cannot be changed. Lines keep their position, so
+    line 1 stays line 1."""
+
+    items: list[POItemCreate] = Field(min_length=1, max_length=100)
+
+
 class POLineView(POItem):
     """A PO line together with how much of it has been delivered and billed so far."""
 

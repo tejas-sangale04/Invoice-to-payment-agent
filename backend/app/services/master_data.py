@@ -15,6 +15,7 @@ from app.models.master_data import (
     POStatus,
     PurchaseOrder,
     PurchaseOrderCreate,
+    PurchaseOrderUpdate,
     Supplier,
     SupplierCreate,
 )
@@ -145,6 +146,55 @@ def create_purchase_order(
             "created_at": _now(),
         }
         tx.set(db.collection("purchase_orders").document(po_number), doc)
+        return doc
+
+    return _po_from_doc(run(db.transaction()))
+
+
+def update_purchase_order(
+    db: firestore.Client, po_number: str, data: PurchaseOrderUpdate, user: str
+) -> PurchaseOrder:
+    """Replace a PO's lines. Allowed only while nothing has been billed against it, because a
+    posted invoice has already used the old quantities and prices. Deliveries already recorded
+    stay, but no line may drop below what was received."""
+    ref = db.collection("purchase_orders").document(po_number)
+
+    @firestore.transactional
+    def run(tx: firestore.Transaction) -> dict:
+        snap = ref.get(transaction=tx)
+        if not snap.exists:
+            raise HTTPException(status_code=404, detail=f"{po_number} not found")
+        doc = snap.to_dict()
+        if doc["status"] != POStatus.open.value or any(
+            Decimal(q) > 0 for q in doc.get("billed", {}).values()
+        ):
+            raise HTTPException(
+                status_code=409,
+                detail=f"{po_number} already has invoices posted against it, so it can't be "
+                "edited. Create a new PO instead.",
+            )
+        received = {k: Decimal(v) for k, v in doc.get("received", {}).items()}
+        for line_id, qty in received.items():
+            index = int(line_id) - 1
+            if qty > 0 and (index >= len(data.items) or data.items[index].qty < qty):
+                raise HTTPException(
+                    status_code=409,
+                    detail=f"Line {line_id} has {qty} received, so it can't be removed or "
+                    "reduced below that.",
+                )
+        items = [
+            {
+                "line_id": str(i),
+                "name": item.name,
+                "qty": str(item.qty),
+                "unit": item.unit,
+                "unit_price_paise": item.unit_price_paise,
+                "tax_rate": str(item.tax_rate),
+            }
+            for i, item in enumerate(data.items, start=1)
+        ]
+        doc = {**doc, "items": items, "updated_by": user, "updated_at": _now()}
+        tx.update(ref, {"items": items, "updated_by": user, "updated_at": doc["updated_at"]})
         return doc
 
     return _po_from_doc(run(db.transaction()))

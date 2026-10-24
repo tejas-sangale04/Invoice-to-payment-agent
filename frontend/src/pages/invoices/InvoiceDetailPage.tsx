@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { AlertTriangle, Copy, RotateCcw, Send } from 'lucide-react'
+import { AlertTriangle, Copy, RotateCcw, Send, Trash2 } from 'lucide-react'
 import { useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
 
 import { PageHeader } from '@/components/PageHeader'
@@ -13,7 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useAuth } from '@/auth/AuthProvider'
 import { ExtractedCard } from '@/pages/invoices/ExtractedCard'
 import { MatchCard } from '@/pages/invoices/MatchCard'
-import { emailSupplier, getAuditLog, getInvoice, getInvoiceFileUrl, reprocessInvoice } from '@/lib/api'
+import { deleteInvoice, emailSupplier, getAuditLog, getInvoice, getInvoiceFileUrl, reprocessInvoice } from '@/lib/api'
 import { FEATURES } from '@/lib/features'
 import { emailReady, initialEmail, useEmailTarget } from '@/lib/supplierEmail'
 import { formatDate } from '@/lib/format'
@@ -24,6 +24,7 @@ import { cn } from '@/lib/utils'
 // While the agent is working the page polls; once it settles, it stops.
 const PROCESSING: InvoiceStatus[] = ['received', 'extracting', 'extracted', 'validated', 'matched', 'auto_approved', 'approved']
 const REPROCESSABLE: InvoiceStatus[] = ['on_hold', 'needs_review', 'failed']
+const DELETABLE: InvoiceStatus[] = ['needs_review', 'failed', 'on_hold', 'pending_approval', 'rejected', 'blocked_duplicate']
 const EMAILABLE: InvoiceStatus[] = ['pending_approval', 'rejected', 'on_hold', 'needs_review', 'blocked_duplicate']
 const ATTENTION: InvoiceStatus[] = ['on_hold', 'needs_review', 'failed', 'blocked_duplicate', 'rejected']
 
@@ -73,6 +74,7 @@ export function InvoiceDetailPage() {
   const live = FEATURES.invoices.live
   const { user, role } = useAuth()
   const qc = useQueryClient()
+  const navigate = useNavigate()
   const invoice = useQuery({
     queryKey: ['invoice', invoiceId],
     queryFn: () => getInvoice(invoiceId),
@@ -82,6 +84,16 @@ export function InvoiceDetailPage() {
   // Signed links last 15 minutes; fetch a fresh one well before that.
   const file = useQuery({ queryKey: ['invoice-file', invoiceId], queryFn: () => getInvoiceFileUrl(invoiceId), enabled: live, staleTime: 10 * 60_000, refetchInterval: 10 * 60_000 })
   const audit = useQuery({ queryKey: ['audit', invoiceId, invoice.data?.updated_at], queryFn: () => getAuditLog(invoiceId), enabled: live && !!invoice.data })
+  const remove = useMutation({
+    mutationFn: () => deleteInvoice(invoiceId),
+    onSuccess: () => {
+      toast.success('Invoice deleted')
+      qc.removeQueries({ queryKey: ['invoice', invoiceId] })
+      qc.invalidateQueries({ queryKey: ['invoices'] })
+      navigate('/invoices')
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : 'Could not delete the invoice'),
+  })
   const reprocess = useMutation({
     mutationFn: () => reprocessInvoice(invoiceId),
     onSuccess: (data) => {
@@ -113,6 +125,18 @@ export function InvoiceDetailPage() {
             {hasRole(role, 'manager') && REPROCESSABLE.includes(inv.status) && (
               <Button size="sm" variant="outline" disabled={reprocess.isPending} onClick={() => reprocess.mutate()}>
                 <RotateCcw /> Reprocess
+              </Button>
+            )}
+            {hasRole(role, 'manager') && DELETABLE.includes(inv.status) && (
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={remove.isPending}
+                onClick={() => {
+                  if (window.confirm('Delete this invoice? Its audit history is kept. You can then upload a corrected copy.')) remove.mutate()
+                }}
+              >
+                <Trash2 /> Delete
               </Button>
             )}
           </div>

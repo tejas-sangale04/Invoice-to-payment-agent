@@ -32,6 +32,7 @@ export default function App() {
 
         <Route path="purchase-orders" element={<RequireAuth minimum="staff"><PurchaseOrdersPage /></RequireAuth>} />
         <Route path="purchase-orders/new" element={<RequireAuth minimum="staff"><CreatePurchaseOrderPage /></RequireAuth>} />
+        <Route path="purchase-orders/:poNumber/edit" element={<RequireAuth minimum="manager"><CreatePurchaseOrderPage /></RequireAuth>} />
         <Route path="purchase-orders/:poNumber" element={<RequireAuth minimum="staff"><PurchaseOrderDetailPage /></RequireAuth>} />
         <Route path="deliveries/new" element={<RequireAuth minimum="staff"><RecordDeliveryPage /></RequireAuth>} />
         <Route path="suppliers" element={<RequireAuth minimum="staff"><SuppliersPage /></RequireAuth>} />
