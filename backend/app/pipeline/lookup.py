@@ -164,6 +164,20 @@ def committed_quantities(db: firestore.Client, me: dict, po_number: str) -> dict
     return totals
 
 
+def get_po_by_ref(db: firestore.Client, printed: str) -> dict | None:
+    """The PO whose reference (typed when it was created) is the number printed on an invoice."""
+    key = re.sub(r"[^A-Z0-9]", "", printed.upper())
+    if not key:
+        return None
+    docs = (
+        db.collection("purchase_orders")
+        .where(filter=firestore.FieldFilter("po_ref_key", "==", key))
+        .limit(1)
+        .get()
+    )
+    return docs[0].to_dict() if docs else None
+
+
 def get_po(db: firestore.Client, po_number: str) -> dict | None:
     snap = db.collection("purchase_orders").document(po_number).get()
     return snap.to_dict() if snap.exists else None

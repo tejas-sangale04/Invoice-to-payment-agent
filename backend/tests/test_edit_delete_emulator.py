@@ -99,3 +99,47 @@ def test_a_posted_invoice_cannot_be_deleted(api, monkeypatch, po1) -> None:
 def test_staff_cannot_delete_and_missing_is_404(api, po1) -> None:
     assert api.delete("/invoices/INV-1", headers=STAFF).status_code == 403
     assert api.delete("/invoices/INV-99", headers=MANAGER).status_code == 404
+
+
+# --------------------------------------------------- PO reference typed by a person
+
+
+def _po_with_ref(api, ref):
+    res = api.post(
+        "/purchase-orders",
+        json={"supplier_id": "SUP-1", "po_ref": ref, "items": ITEMS},
+        headers=STAFF,
+    )
+    return res
+
+
+def test_an_invoice_quoting_the_reference_typed_on_the_po_matches_it(api, monkeypatch, po1) -> None:
+    res = _po_with_ref(api, "KF/ORD/88")
+    assert res.status_code == 201, res.text
+    assert (res.json()["po_number"], res.json()["po_ref"]) == ("PO-2", "KF/ORD/88")
+    deliver(api, "PO-2")
+    use(monkeypatch, invoice_json(po_number="kf-ord 88"))
+    inv = upload(api)
+    assert inv["match_result"]["matched_po"] == "PO-2"
+    assert inv["match_result"]["matched_without_po_number"] is False
+    assert inv["status"] == "posted"
+
+
+def test_a_reference_must_be_new_and_not_look_like_an_assigned_number(api, po1) -> None:
+    assert _po_with_ref(api, "KF/ORD/88").status_code == 201
+    again = _po_with_ref(api, "KFORD88")
+    assert again.status_code == 409
+    assert "PO-2 already uses" in again.json()["error"]["message"]
+    assert _po_with_ref(api, "PO-77").status_code == 422
+    assert _po_with_ref(api, "  ").status_code == 201  # blank means none
+
+
+def test_a_manager_can_change_a_pos_reference(api, po1) -> None:
+    body = {"items": ITEMS, "po_ref": "NEW-REF-1"}
+    res = api.put("/purchase-orders/PO-1", json=body, headers=MANAGER)
+    assert res.status_code == 200, res.text
+    assert res.json()["po_ref"] == "NEW-REF-1"
+    assert _po_with_ref(api, "new ref 1").status_code == 409
+    cleared = api.put("/purchase-orders/PO-1", json={"items": ITEMS}, headers=MANAGER)
+    assert cleared.json()["po_ref"] is None
+    assert _po_with_ref(api, "new ref 1").status_code == 201

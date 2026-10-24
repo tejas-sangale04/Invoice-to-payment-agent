@@ -58,6 +58,9 @@ class POStatus(StrEnum):
     closed = "closed"
 
 
+PORef = Annotated[str, StringConstraints(strip_whitespace=True, max_length=40)] | None
+
+
 class POItemCreate(BaseModel):
     name: NonEmpty
     qty: Quantity
@@ -72,6 +75,9 @@ class POItem(POItemCreate):
 
 class PurchaseOrderCreate(BaseModel):
     supplier_id: str
+    # The PO number as it will be printed on the supplier's invoice, when it isn't the one the
+    # app assigns (PO-1, PO-2, ...). An invoice quoting it is matched to this PO.
+    po_ref: PORef = None
     items: list[POItemCreate] = Field(min_length=1, max_length=100)
 
 
@@ -79,6 +85,7 @@ class PurchaseOrderUpdate(BaseModel):
     """The new lines of a PO. The supplier cannot be changed. Lines keep their position, so
     line 1 stays line 1."""
 
+    po_ref: PORef = None
     items: list[POItemCreate] = Field(min_length=1, max_length=100)
 
 
@@ -93,6 +100,7 @@ class POLineView(POItem):
 
 class PurchaseOrder(BaseModel):
     po_number: str
+    po_ref: str | None = None
     supplier_id: str
     supplier_name: str
     status: POStatus

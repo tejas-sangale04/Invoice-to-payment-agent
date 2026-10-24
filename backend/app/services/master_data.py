@@ -92,6 +92,40 @@ def get_supplier(db: firestore.Client, supplier_id: str) -> Supplier | None:
 # Firestore has no Decimal type, so quantities and tax rates are stored as strings.
 
 
+def po_ref_key(ref: str) -> str:
+    """'KF/ORD/88', 'kf-ord 88' and 'KFORD88' are the same reference."""
+    return re.sub(r"[^A-Z0-9]", "", ref.upper())
+
+
+_APP_PO_NUMBER = re.compile(r"^(?:PO|P\.?O\.?)?[\s.\-:#]*(?:NO\.?)?[\s.\-:#]*\d+$", re.IGNORECASE)
+
+
+def _checked_po_ref(tx: firestore.Transaction, db: firestore.Client, ref: str | None, own: str):
+    """(ref, key) for a PO reference typed by a person, or (None, None). Refuses one that looks
+    like an app-assigned number (PO-5) and one another PO already uses."""
+    if not ref:
+        return None, None
+    key = po_ref_key(ref)
+    if not key:
+        raise HTTPException(status_code=422, detail="The PO reference needs letters or digits")
+    if _APP_PO_NUMBER.match(ref.strip()):
+        raise HTTPException(
+            status_code=422,
+            detail="That looks like a number the app assigns (PO-1, PO-2, ...). Leave it blank "
+            "to use the assigned number, or enter the number printed on the supplier's invoice.",
+        )
+    clash = (
+        db.collection("purchase_orders")
+        .where(filter=firestore.FieldFilter("po_ref_key", "==", key))
+        .limit(2)
+        .get(transaction=tx)
+    )
+    other = next((c.to_dict()["po_number"] for c in clash if c.id != own), None)
+    if other:
+        raise HTTPException(status_code=409, detail=f"{other} already uses the reference '{ref}'")
+    return ref, key
+
+
 def _po_from_doc(doc: dict) -> PurchaseOrder:
     received: dict[str, str] = doc.get("received", {})
     billed: dict[str, str] = doc.get("billed", {})
@@ -112,6 +146,7 @@ def _po_from_doc(doc: dict) -> PurchaseOrder:
         )
     return PurchaseOrder(
         po_number=doc["po_number"],
+        po_ref=doc.get("po_ref"),
         supplier_id=doc["supplier_id"],
         supplier_name=doc["supplier_name"],
         status=doc["status"],
@@ -133,9 +168,12 @@ def create_purchase_order(
 
     @firestore.transactional
     def run(tx: firestore.Transaction) -> dict:
+        po_ref, key = _checked_po_ref(tx, db, data.po_ref, own="")
         po_number = next_id(tx, db, "purchase_orders", "PO")
         doc = {
             "po_number": po_number,
+            "po_ref": po_ref,
+            "po_ref_key": key,
             "supplier_id": supplier.supplier_id,
             "supplier_name": supplier.name,
             "status": POStatus.open.value,
@@ -202,8 +240,16 @@ def update_purchase_order(
             }
             for i, item in enumerate(data.items, start=1)
         ]
-        doc = {**doc, "items": items, "updated_by": user, "updated_at": _now()}
-        tx.update(ref, {"items": items, "updated_by": user, "updated_at": doc["updated_at"]})
+        po_ref, key = _checked_po_ref(tx, db, data.po_ref, own=po_number)
+        changes = {
+            "items": items,
+            "po_ref": po_ref,
+            "po_ref_key": key,
+            "updated_by": user,
+            "updated_at": _now(),
+        }
+        doc = {**doc, **changes}
+        tx.update(ref, changes)
         return doc
 
     return _po_from_doc(run(db.transaction()))

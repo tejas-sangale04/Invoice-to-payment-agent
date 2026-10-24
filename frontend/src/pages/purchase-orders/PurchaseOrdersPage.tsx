@@ -85,6 +85,7 @@ export function PurchaseOrdersPage() {
                       <Link to={`/purchase-orders/${po.po_number}`} onClick={(e) => e.stopPropagation()}>
                         {po.po_number}
                       </Link>
+                      {po.po_ref && <span className="ml-2 text-xs font-normal text-muted-foreground">{po.po_ref}</span>}
                     </TableCell>
                     <TableCell>{po.supplier_name}</TableCell>
                     <TableCell>{po.items.length}</TableCell>

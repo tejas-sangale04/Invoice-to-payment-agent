@@ -200,6 +200,8 @@ def _match(db: firestore.Client, invoice_id: str) -> None:
     else:
         po_number = normalize_po_number(e.po_number)
         po = lookup.get_po(db, po_number) if po_number else None
+        if po is None and e.po_number:
+            po = lookup.get_po_by_ref(db, e.po_number)  # a number a person gave its PO
         if supplier.problem:
             issues.append(MatchIssue(kind=K.supplier, message=supplier.problem))
         if (not e.po_number or po is None) and supplier.supplier and not supplier.problem:
@@ -217,12 +219,12 @@ def _match(db: firestore.Client, invoice_id: str) -> None:
                 MatchIssue(kind=K.no_po, message=f"PO number '{e.po_number}' was not found")
             )
         elif po["status"] == "closed":
-            issues.append(MatchIssue(kind=K.no_po, message=f"{po_number} is closed"))
+            issues.append(MatchIssue(kind=K.no_po, message=f"{po['po_number']} is closed"))
         elif supplier.supplier and po["supplier_id"] != supplier.key:
             issues.append(
                 MatchIssue(
                     kind=K.supplier,
-                    message=f"{po_number} is for {po['supplier_name']}, but this invoice is "
+                    message=f"{po['po_number']} is for {po['supplier_name']}, but this invoice is "
                     f"from {supplier.supplier['name']}",
                 )
             )

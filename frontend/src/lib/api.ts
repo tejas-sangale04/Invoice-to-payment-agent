@@ -79,11 +79,11 @@ export interface POItemInput {
   unit_price_paise: number
   tax_rate: string
 }
-export const createPurchaseOrder = (body: { supplier_id: string; items: POItemInput[] }) =>
+export const createPurchaseOrder = (body: { supplier_id: string; po_ref?: string; items: POItemInput[] }) =>
   apiFetch<PurchaseOrder>('/purchase-orders', { method: 'POST', body: JSON.stringify(body) })
 
-export const updatePurchaseOrder = (po: string, items: POItemInput[]) =>
-  apiFetch<PurchaseOrder>(`/purchase-orders/${encodeURIComponent(po)}`, { method: 'PUT', body: JSON.stringify({ items }) })
+export const updatePurchaseOrder = (po: string, items: POItemInput[], po_ref?: string) =>
+  apiFetch<PurchaseOrder>(`/purchase-orders/${encodeURIComponent(po)}`, { method: 'PUT', body: JSON.stringify({ items, po_ref: po_ref || null }) })
 
 export const listGoodsReceipts = (poNumber?: string) =>
   apiFetch<Page<GoodsReceipt>>(`/goods-receipts${qs({ po_number: poNumber, limit: 100 })}`)
