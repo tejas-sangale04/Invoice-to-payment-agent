@@ -61,6 +61,22 @@ class Settings(BaseSettings):
     gemini_output_usd_per_mtok: float = 2.50
     usd_to_inr: float = 88.0
 
+    # Emails to suppliers (a rejection, or a question about a held invoice). "disabled" sends
+    # nothing; "smtp" sends through any mail account, e.g. Gmail with an app password.
+    email_mode: Literal["disabled", "smtp"] = "disabled"
+    smtp_host: str = ""
+    smtp_port: int = 587
+    smtp_username: str = ""
+    smtp_password: str = ""
+    smtp_starttls: bool = True  # False for port 465, which is encrypted from the start (SSL)
+    smtp_timeout_seconds: float = 15
+    email_from: str = ""  # e.g. "Brew & Bake Accounts <accounts@yourcompany.in>"
+    email_reply_to: str = ""
+
+    @property
+    def email_enabled(self) -> bool:
+        return self.email_mode == "smtp" and bool(self.smtp_host and self.email_from)
+
     @property
     def agents_enabled(self) -> bool:
         return (self.exception_agents or self.extractor) == "gemini"

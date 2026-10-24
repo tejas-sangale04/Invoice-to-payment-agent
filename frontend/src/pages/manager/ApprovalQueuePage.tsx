@@ -10,9 +10,11 @@ import { EmptyState, ErrorState, LoadingState, NotLiveNotice } from '@/component
 import { StatusBadge } from '@/components/StatusBadge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import { SupplierEmailEditor } from '@/components/SupplierEmailEditor'
 import { Textarea } from '@/components/ui/textarea'
 import { approveInvoice, listInvoices, rejectInvoice } from '@/lib/api'
 import { FEATURES } from '@/lib/features'
+import { emailReady, initialEmail, useEmailTarget } from '@/lib/supplierEmail'
 import { formatPaise } from '@/lib/format'
 import type { Invoice } from '@/lib/types'
 
@@ -28,7 +30,17 @@ function ApprovalCard({ inv }: { inv: Invoice }) {
     qc.invalidateQueries({ queryKey: ['ledger'] })
   }
   const approve = useMutation({ mutationFn: () => approveInvoice(inv.invoice_id, comment), onSuccess: done('approved and posted') })
-  const reject = useMutation({ mutationFn: () => rejectInvoice(inv.invoice_id, comment), onSuccess: done('rejected') })
+  const [email, setEmail] = useState(() => initialEmail(inv))
+  const target = useEmailTarget(inv)
+  const emailing = email.send && target.canSend
+  const reject = useMutation({
+    mutationFn: () => rejectInvoice(inv.invoice_id, comment, emailing ? { subject: email.subject.trim(), body: email.body.trim() } : undefined),
+    onSuccess: (res) => {
+      done(res.supplier_email?.status === 'sent' ? `rejected and ${res.supplier_email.to} emailed` : 'rejected')()
+      if (res.supplier_email?.status === 'failed')
+        toast.warning(`Rejected, but the email could not be sent: ${res.supplier_email.error}. You can send it again from the invoice.`)
+    },
+  })
   const diff = inv.match_result?.difference_paise ?? 0
 
   return (
@@ -61,12 +73,13 @@ function ApprovalCard({ inv }: { inv: Invoice }) {
         </dl>
         {inv.decision_reason && <p>{inv.decision_reason}</p>}
         <Textarea aria-label="Comment" placeholder="Comment (required to reject)" value={comment} onChange={(e) => setComment(e.target.value)} />
+        <SupplierEmailEditor inv={inv} value={email} onChange={setEmail} rejected />
         {ownUpload && <p className="text-amber-700">You uploaded this invoice, so another manager has to approve or reject it.</p>}
         {(approve.isError || reject.isError) && <ErrorState error={(approve.error ?? reject.error)!} />}
       </CardContent>
       <CardFooter className="justify-end gap-2">
-        <Button variant="outline" disabled={ownUpload || !comment.trim() || reject.isPending} onClick={() => reject.mutate()}>
-          <X /> Reject
+        <Button variant="outline" disabled={ownUpload || !comment.trim() || (emailing && !emailReady(email)) || reject.isPending} onClick={() => reject.mutate()}>
+          <X /> {emailing ? 'Reject and email' : 'Reject'}
         </Button>
         <Button disabled={ownUpload || approve.isPending} onClick={() => approve.mutate()}>
           <Check /> Approve

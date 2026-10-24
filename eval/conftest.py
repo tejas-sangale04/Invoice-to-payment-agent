@@ -50,8 +50,12 @@ def pytest_configure(config: pytest.Config) -> None:
     if not os.environ.get("FIRESTORE_EMULATOR_HOST"):
         raise pytest.UsageError(
             "The evaluation wipes the database before every case, so it only runs against the "
-            "Firestore emulator. Start it (firebase emulators:start) and set "
-            "FIRESTORE_EMULATOR_HOST, as in backend/.env.example."
+            "Firestore emulator, never your real Firestore. In a second terminal run:\n"
+            "  firebase emulators:start --only firestore,auth --project demo-invoiceflow\n"
+            "then in this one set the variable and run again:\n"
+            "  Windows cmd:  set FIRESTORE_EMULATOR_HOST=127.0.0.1:8080\n"
+            "  PowerShell:   $env:FIRESTORE_EMULATOR_HOST=\"127.0.0.1:8080\"\n"
+            "  macOS/Linux:  export FIRESTORE_EMULATOR_HOST=127.0.0.1:8080"
         )
     s = get_settings()
     agents = config.getoption("--agents")

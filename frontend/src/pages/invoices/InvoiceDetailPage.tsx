@@ -1,9 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { AlertTriangle, Copy, RotateCcw } from 'lucide-react'
+import { AlertTriangle, Copy, RotateCcw, Send } from 'lucide-react'
+import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
 
 import { PageHeader } from '@/components/PageHeader'
+import { SupplierEmailEditor } from '@/components/SupplierEmailEditor'
 import { ErrorState, LoadingState, NotLiveNotice } from '@/components/States'
 import { StatusBadge } from '@/components/StatusBadge'
 import { Button } from '@/components/ui/button'
@@ -11,17 +13,60 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useAuth } from '@/auth/AuthProvider'
 import { ExtractedCard } from '@/pages/invoices/ExtractedCard'
 import { MatchCard } from '@/pages/invoices/MatchCard'
-import { getAuditLog, getInvoice, getInvoiceFileUrl, reprocessInvoice } from '@/lib/api'
+import { emailSupplier, getAuditLog, getInvoice, getInvoiceFileUrl, reprocessInvoice } from '@/lib/api'
 import { FEATURES } from '@/lib/features'
+import { emailReady, initialEmail, useEmailTarget } from '@/lib/supplierEmail'
 import { formatDate } from '@/lib/format'
 import { hasRole } from '@/lib/roles'
-import type { InvoiceStatus } from '@/lib/types'
+import type { Invoice, InvoiceStatus } from '@/lib/types'
 import { cn } from '@/lib/utils'
 
 // While the agent is working the page polls; once it settles, it stops.
 const PROCESSING: InvoiceStatus[] = ['received', 'extracting', 'extracted', 'validated', 'matched', 'auto_approved', 'approved']
 const REPROCESSABLE: InvoiceStatus[] = ['on_hold', 'needs_review', 'failed']
+const EMAILABLE: InvoiceStatus[] = ['pending_approval', 'rejected', 'on_hold', 'needs_review', 'blocked_duplicate']
 const ATTENTION: InvoiceStatus[] = ['on_hold', 'needs_review', 'failed', 'blocked_duplicate', 'rejected']
+
+function EmailSupplierCard({ inv }: { inv: Invoice }) {
+  const qc = useQueryClient()
+  const target = useEmailTarget(inv)
+  const [email, setEmail] = useState(() => initialEmail(inv))
+  const last = inv.supplier_email
+  const send = useMutation({
+    mutationFn: () => emailSupplier(inv.invoice_id, { subject: email.subject.trim(), body: email.body.trim() }),
+    onSuccess: (data) => {
+      qc.setQueryData(['invoice', inv.invoice_id], data)
+      qc.invalidateQueries({ queryKey: ['audit', inv.invoice_id] })
+      if (data.supplier_email?.status === 'sent') toast.success(`Emailed ${data.supplier_email.to}`)
+      else toast.error(`The email could not be sent: ${data.supplier_email?.error}`)
+    },
+  })
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">Email the supplier</CardTitle>
+      </CardHeader>
+      <CardContent className="grid gap-3 text-sm">
+        {last && (
+          <p className={last.status === 'sent' ? 'text-green-700' : 'text-destructive'}>
+            {last.status === 'sent'
+              ? `Emailed ${last.to} on ${new Date(last.at).toLocaleString('en-IN')} (${last.by_email ?? last.by}): ${last.subject}`
+              : `The last email to ${last.to} could not be sent: ${last.error}`}
+          </p>
+        )}
+        <SupplierEmailEditor inv={inv} value={email} onChange={setEmail} toggle={false} />
+        {send.isError && <ErrorState error={send.error} />}
+      </CardContent>
+      {target.canSend && (
+        <div className="flex justify-end px-6 pb-6">
+          <Button disabled={!emailReady(email) || send.isPending} onClick={() => send.mutate()}>
+            <Send /> {last?.status === 'sent' ? 'Send again' : 'Send email'}
+          </Button>
+        </div>
+      )}
+    </Card>
+  )
+}
 
 export function InvoiceDetailPage() {
   const { invoiceId = '' } = useParams()
@@ -179,6 +224,10 @@ export function InvoiceDetailPage() {
               )}
             </CardContent>
           </Card>
+
+          {hasRole(role, 'manager') && EMAILABLE.includes(inv.status) && (inv.supplier_email_draft || inv.supplier_email) && (
+            <EmailSupplierCard key={inv.supplier_email?.at ?? 'draft'} inv={inv} />
+          )}
 
           <Card>
             <CardHeader>

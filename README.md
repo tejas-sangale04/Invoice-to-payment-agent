@@ -97,6 +97,10 @@ To try the Extraction Agent with real Gemini using your own Google Cloud service
 
 Demo users (emulator only), all with password `password123`: `staff@invoiceflow.test`, `manager@invoiceflow.test`, `admin@invoiceflow.test`.
 
+## Emailing suppliers
+
+A manager can email the supplier on file for an invoice, most often when rejecting it. The Explanation Agent writes the email (a template if Gemini is off or its text fails the amount check), the manager reads and edits it, and only then is it sent. The recipient is always the invoice's supplier, never an address typed into a request. Email is off until you set `EMAIL_MODE=smtp` and the SMTP settings in `backend/.env`; `backend/.env.example` has a Brevo example (SMTP login and key, and `EMAIL_FROM` must be a verified sender). A failed send is recorded on the invoice and can be sent again; it does not undo the rejection.
+
 ## Roles and auth
 
 Roles (`staff`, `manager`, `admin`) are Firebase custom claims. Every backend endpoint verifies the Firebase ID token and reads the role from its claims, never from the request body. Each role includes everything the role below it can do. Admins assign roles with `PUT /users/{uid}/role`; the user picks up the new role on their next sign-in.

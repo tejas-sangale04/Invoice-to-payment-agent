@@ -7,8 +7,21 @@ from fastapi import HTTPException
 from google.cloud import firestore
 
 from app.models.common import Page
-from app.models.invoice import AuditEntry, Invoice, InvoiceStatus, LedgerEntry
+from app.models.invoice import (
+    AiUsage,
+    AuditEntry,
+    EmailDraft,
+    Extracted,
+    Invoice,
+    InvoiceStatus,
+    LedgerEntry,
+    MatchResult,
+    SupplierEmail,
+)
+from app.models.master_data import Supplier
 from app.models.user import CurrentUser
+from app.pipeline.decide import decide
+from app.pipeline.explain import explain
 from app.pipeline.status import (
     REPROCESSABLE,
     InvalidTransition,
@@ -16,8 +29,11 @@ from app.pipeline.status import (
     transition,
     write_audit,
 )
+from app.services import mailer
+from app.services import rules as rules_svc
 from app.services.counters import next_id
 from app.services.files import sniff
+from app.services.master_data import get_supplier
 from app.services.pagination import paginate
 from app.services.storage import Storage
 
@@ -184,6 +200,113 @@ def reject(db: firestore.Client, invoice_id: str, user: CurrentUser, reason: str
         )
     except InvalidTransition as exc:
         raise _not_waiting(exc, "rejected") from exc
+    return get_invoice(db, invoice_id)
+
+
+# ------------------------------------------------------------- supplier emails
+
+EMAILABLE = frozenset(
+    {
+        InvoiceStatus.pending_approval,
+        InvoiceStatus.rejected,
+        InvoiceStatus.on_hold,
+        InvoiceStatus.needs_review,
+        InvoiceStatus.blocked_duplicate,
+    }
+)
+
+
+def email_recipient(db: firestore.Client, doc: dict) -> tuple[mailer.Mailer, Supplier]:
+    """The mail sender and the supplier on file for this invoice, or the reason there is none."""
+    send = mailer.get_mailer()
+    if send is None:
+        raise HTTPException(
+            status_code=503,
+            detail="Email isn't set up. Add the mail settings to backend/.env (EMAIL_MODE=smtp).",
+        )
+    supplier_id = (doc.get("match_result") or {}).get("supplier_id")
+    supplier = get_supplier(db, supplier_id) if supplier_id else None
+    if supplier is None:
+        raise HTTPException(
+            status_code=422,
+            detail="This invoice isn't matched to a supplier on file, so there is no address "
+            "to send to. Add the supplier first, or write to them yourself.",
+        )
+    return send, supplier
+
+
+def draft_supplier_email(db: firestore.Client, invoice_id: str, rejected: bool) -> EmailDraft:
+    """Ask the Explanation Agent to write the email to the supplier (the template if the agent
+    is off or its text fails the amount check). Nothing is sent. The model call is added to the
+    invoice's AI usage."""
+    doc = get_invoice_doc(db, invoice_id)
+    if not doc.get("extracted") or not doc.get("match_result"):
+        raise HTTPException(
+            status_code=409,
+            detail="This invoice hasn't been read and matched yet, so there is nothing to write.",
+        )
+    extracted = Extracted(**doc["extracted"])
+    result = MatchResult(**doc["match_result"])
+    outcome = decide(result, extracted.total_paise or 0, rules_svc.get_rules(db))
+    usage = AiUsage(**(doc.get("ai_usage") or {}))
+    written = explain(extracted, result, outcome, usage, rejected)
+    db.collection("invoices").document(invoice_id).update({"ai_usage": usage.model_dump()})
+    return EmailDraft(email=written.supplier_email or "", source=written.source)
+
+
+def email_supplier(
+    db: firestore.Client, invoice_id: str, user: CurrentUser, email: SupplierEmail
+) -> Invoice:
+    """Email the supplier on file for this invoice, then record what happened on the invoice
+    and in the audit log. A failed send is recorded and returned, not raised: the manager sees
+    it on the invoice and can try again."""
+    doc = get_invoice_doc(db, invoice_id)
+    status = InvoiceStatus(doc["status"])
+    if status not in EMAILABLE:
+        raise HTTPException(
+            status_code=409,
+            detail="Emails to the supplier can be sent for invoices that are waiting, on hold, "
+            f"rejected or need review (this one is {status.value.replace('_', ' ')})",
+        )
+    send, supplier = email_recipient(db, doc)
+
+    error = None
+    try:
+        send.send(supplier.email, email.subject, email.body)
+    except mailer.MailerError as exc:
+        error = str(exc)
+    now = datetime.now(UTC)
+    record = {
+        "to": supplier.email,
+        "subject": email.subject,
+        "body": email.body,
+        "status": "failed" if error else "sent",
+        "error": error,
+        "by": user.uid,
+        "by_email": user.email,
+        "at": now,
+    }
+
+    @firestore.transactional
+    def save(tx: firestore.Transaction) -> None:
+        tx.update(
+            db.collection("invoices").document(invoice_id),
+            {"supplier_email": record, "updated_at": now},
+        )
+        write_audit(
+            tx,
+            db,
+            invoice_id,
+            "supplier_email_failed" if error else "supplier_emailed",
+            user.uid,
+            details=(
+                f"Could not email {supplier.email}: {error}"
+                if error
+                else f"Emailed {supplier.email}: {email.subject}"
+            ),
+        )
+
+    save(db.transaction())
     return get_invoice(db, invoice_id)
 
 

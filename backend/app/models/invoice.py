@@ -3,7 +3,7 @@ from decimal import Decimal
 from enum import StrEnum
 from typing import Annotated
 
-from pydantic import BaseModel, StringConstraints
+from pydantic import BaseModel, StringConstraints, field_validator
 
 
 class InvoiceStatus(StrEnum):
@@ -132,6 +132,45 @@ class AiUsage(BaseModel):
     latency_ms: int = 0
 
 
+class SupplierEmail(BaseModel):
+    """The email a manager has read and wants sent to the supplier on file."""
+
+    subject: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=200)]
+    body: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=8000)]
+
+    @field_validator("subject")
+    @classmethod
+    def _one_line(cls, value: str) -> str:
+        if "\r" in value or "\n" in value:
+            raise ValueError("The subject must be one line")
+        return value
+
+
+class EmailDraft(BaseModel):
+    """What the Explanation Agent wrote for the supplier, for a manager to read and send."""
+
+    email: str  # "Subject: ..." on the first line, then the message
+    source: str  # "agent", or "template" when the agent's text failed its checks
+
+
+class SentEmail(BaseModel):
+    """The last email sent (or tried) to the supplier about an invoice."""
+
+    to: str
+    subject: str
+    body: str
+    status: str  # "sent" or "failed"
+    error: str | None = None
+    by: str
+    by_email: str | None = None
+    at: datetime
+
+
+class EmailStatus(BaseModel):
+    enabled: bool
+    sender: str | None = None
+
+
 class Invoice(BaseModel):
     invoice_id: str
     status: InvoiceStatus
@@ -151,6 +190,7 @@ class Invoice(BaseModel):
     explanation_source: str | None = None  # "agent", or "template" when the agent's text failed
     resolution: Resolution | None = None
     supplier_email_draft: str | None = None
+    supplier_email: SentEmail | None = None
     uploaded_by: str
     approved_by: str | None = None
     approved_by_email: str | None = None
@@ -183,6 +223,8 @@ class ApproveRequest(BaseModel):
 
 class RejectRequest(BaseModel):
     reason: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=1000)]
+    # When set, the supplier is emailed after the rejection is saved.
+    email: SupplierEmail | None = None
 
 
 class LedgerEntry(BaseModel):

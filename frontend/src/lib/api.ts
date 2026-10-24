@@ -2,6 +2,7 @@ import { auth } from '@/lib/firebase'
 import type {
   AuditEntry,
   BusinessRules,
+  EmailStatus,
   GoodsReceipt,
   Invoice,
   InvoiceStatus,
@@ -126,8 +127,22 @@ export const uploadInvoice = (file: File) => {
 }
 export const approveInvoice = (id: string, comment: string) =>
   apiFetch<Invoice>(`/invoices/${encodeURIComponent(id)}/approve`, { method: 'POST', body: JSON.stringify({ comment }) })
-export const rejectInvoice = (id: string, reason: string) =>
-  apiFetch<Invoice>(`/invoices/${encodeURIComponent(id)}/reject`, { method: 'POST', body: JSON.stringify({ reason }) })
+export interface SupplierEmailInput {
+  subject: string
+  body: string
+}
+export const rejectInvoice = (id: string, reason: string, email?: SupplierEmailInput) =>
+  apiFetch<Invoice>(`/invoices/${encodeURIComponent(id)}/reject`, {
+    method: 'POST',
+    body: JSON.stringify(email ? { reason, email } : { reason }),
+  })
+export const emailSupplier = (id: string, email: SupplierEmailInput) =>
+  apiFetch<Invoice>(`/invoices/${encodeURIComponent(id)}/email-supplier`, { method: 'POST', body: JSON.stringify(email) })
+export const draftSupplierEmail = (id: string, rejected: boolean) =>
+  apiFetch<{ email: string; source: string }>(`/invoices/${encodeURIComponent(id)}/email-draft${qs({ rejected: rejected ? 'true' : undefined })}`, {
+    method: 'POST',
+  })
+export const getEmailStatus = () => apiFetch<EmailStatus>('/email-status')
 export const reprocessInvoice = (id: string) =>
   apiFetch<Invoice>(`/invoices/${encodeURIComponent(id)}/reprocess`, { method: 'POST' })
 export const getAuditLog = (invoiceId: string) =>
