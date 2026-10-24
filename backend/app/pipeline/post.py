@@ -92,7 +92,10 @@ def post_invoice(db: firestore.Client, invoice_id: str, actor: str) -> S:
         billed = {k: Decimal(v) for k, v in po.get("billed", {}).items()}
         for line in match.per_line:
             if line.po_line_id:
-                billed[line.po_line_id] = billed.get(line.po_line_id, Decimal(0)) + line.billed_qty
+                # Only what is paid for counts as billed: a held invoice a manager approved is
+                # paid the available quantity, not everything the supplier billed.
+                qty = min(line.billed_qty, line.available_qty)
+                billed[line.po_line_id] = billed.get(line.po_line_id, Decimal(0)) + qty
         amount = match.correct_amount_paise
         tx.set(
             entry_ref,

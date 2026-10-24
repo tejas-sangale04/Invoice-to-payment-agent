@@ -230,7 +230,7 @@ export function InvoiceDetailPage() {
                   {inv.rejection_reason}
                 </p>
               )}
-              {inv.status === 'pending_approval' && hasRole(role, 'manager') && (
+              {(inv.status === 'pending_approval' || inv.status === 'on_hold') && hasRole(role, 'manager') && (
                 <p>
                   <Link to="/approvals" className="underline underline-offset-4">
                     Approve or reject it in the approval queue

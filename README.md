@@ -101,6 +101,10 @@ Demo users (emulator only), all with password `password123`: `staff@invoiceflow.
 
 A manager can delete an invoice that was never posted (needs review, failed, on hold, waiting, rejected or blocked), so a corrected copy can be uploaded; the audit log keeps its history and records the deletion. A manager can also edit a PO's lines until an invoice has been posted against it; received goods can't be removed or reduced below what arrived. Posted invoices and the POs they billed are locked. For an invoice stuck because its PO was wrong, fix the PO and press Reprocess instead of deleting.
 
+## Held invoices
+
+An invoice on hold (billed more than was delivered, or priced above the limit) also appears in the approval queue. A manager can approve it with a comment: it is posted at the correct amount (what was delivered, at the PO price), not the billed amount, only that quantity counts as billed on the PO, and no email goes to the supplier. Rejecting it can email the supplier as usual. Another manager has to decide, as for any invoice.
+
 ## Emailing suppliers
 
 A manager can email the supplier on file for an invoice, most often when rejecting it. The Explanation Agent writes the email (a template if Gemini is off or its text fails the amount check), the manager reads and edits it, and only then is it sent. The recipient is always the invoice's supplier, never an address typed into a request. Email is off until you set `EMAIL_MODE=smtp` and the SMTP settings in `backend/.env`; `backend/.env.example` has a Brevo example (SMTP login and key, and `EMAIL_FROM` must be a verified sender). A failed send is recorded on the invoice and can be sent again; it does not undo the rejection.

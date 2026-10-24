@@ -39,7 +39,7 @@ def test_happy_paths_from_the_spec_are_allowed() -> None:
         (S.matched, S.posted),  # can't post without approval
         (S.pending_approval, S.posted),
         (S.needs_review, S.approved),
-        (S.on_hold, S.approved),
+        (S.needs_review, S.rejected),
         (S.blocked_duplicate, S.received),  # duplicates are never reprocessed
         (S.rejected, S.approved),
         (S.paid, S.posted),

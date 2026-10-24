@@ -185,6 +185,44 @@ def test_approve_without_a_comment(api, monkeypatch, po1) -> None:
     assert res.json()["status"] == "posted"
 
 
+def _held_short_delivery(api, monkeypatch, po1) -> str:
+    deliver(api, po1, milk="40")
+    use(monkeypatch, invoice_json())
+    inv = upload(api)
+    assert inv["status"] == "on_hold"
+    return inv["invoice_id"]
+
+
+def test_a_manager_can_approve_a_held_invoice_and_only_the_delivered_part_is_paid(
+    api, monkeypatch, po1
+) -> None:
+    invoice_id = _held_short_delivery(api, monkeypatch, po1)
+    res = api.post(f"/invoices/{invoice_id}/approve", json={}, headers=MANAGER)
+    assert res.status_code == 422  # a hold is only overridden with a reason
+    assert api.get(f"/invoices/{invoice_id}", headers=STAFF).json()["status"] == "on_hold"
+
+    res = api.post(
+        f"/invoices/{invoice_id}/approve", json={"comment": "Rest follows"}, headers=MANAGER
+    )
+    assert res.status_code == 200, res.text
+    assert res.json()["status"] == "posted"
+    # 40 L at Rs 60 + 2.5 kg paneer with GST: Rs 3,450.00, not the Rs 4,050.00 billed.
+    [entry] = ledger(api)
+    assert entry["amount_paise"] == 345000
+    # Only the 40 L paid for count as billed, so the other 10 L can still be billed later.
+    assert [line["qty_billed"] for line in po(api)["items"]] == ["40", "2.5"]
+
+
+def test_a_held_invoice_can_be_rejected(api, monkeypatch, po1) -> None:
+    invoice_id = _held_short_delivery(api, monkeypatch, po1)
+    res = api.post(
+        f"/invoices/{invoice_id}/reject", json={"reason": "Send a credit note"}, headers=MANAGER
+    )
+    assert res.status_code == 200, res.text
+    assert res.json()["status"] == "rejected"
+    assert ledger(api) == []
+
+
 def test_nobody_approves_or_rejects_their_own_upload(api, monkeypatch, po1) -> None:
     deliver(api, po1)
     use(monkeypatch, overpriced_milk())
@@ -235,7 +273,7 @@ def test_only_invoices_waiting_for_approval_can_be_decided(api, monkeypatch, po1
     res = api.post(f"/invoices/{inv['invoice_id']}/approve", headers=MANAGER)
     assert res.status_code == 409
     assert res.json()["error"]["message"] == (
-        "Only invoices waiting for approval can be approved (this one is posted)"
+        "Only invoices waiting for approval or on hold can be approved (this one is posted)"
     )
     res = api.post(f"/invoices/{inv['invoice_id']}/reject", json={"reason": "x"}, headers=MANAGER)
     assert res.status_code == 409

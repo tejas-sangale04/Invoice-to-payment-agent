@@ -33,7 +33,9 @@ TRANSITIONS: dict[S, frozenset[S]] = {
     S.approved: frozenset({S.posted, S.blocked_duplicate, S.failed}),
     S.posted: frozenset({S.paid}),
     # A manager can send these back through the pipeline ("reprocess").
-    S.on_hold: frozenset({S.received}),
+    # A manager can also decide a held invoice: approve it (it is paid the correct amount, not
+    # the billed one) or reject it.
+    S.on_hold: frozenset({S.received, S.approved, S.rejected}),
     S.needs_review: frozenset({S.received}),
     S.failed: frozenset({S.received}),
     S.rejected: frozenset(),

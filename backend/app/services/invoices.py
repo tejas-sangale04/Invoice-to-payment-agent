@@ -155,13 +155,24 @@ def _decide_as(db: firestore.Client, invoice_id: str, user: CurrentUser, verb: s
 def _not_waiting(exc: InvalidTransition, verb: str) -> HTTPException:
     return HTTPException(
         status_code=409,
-        detail=f"Only invoices waiting for approval can be {verb} "
+        detail=f"Only invoices waiting for approval or on hold can be {verb} "
         f"(this one is {exc.current.value.replace('_', ' ')})",
     )
 
 
+DECIDABLE = frozenset({InvoiceStatus.pending_approval, InvoiceStatus.on_hold})
+
+
 def approve(db: firestore.Client, invoice_id: str, user: CurrentUser, comment: str | None) -> None:
     _decide_as(db, invoice_id, user, "approve")
+    if not (comment or "").strip() and (
+        get_invoice_doc(db, invoice_id)["status"] == InvoiceStatus.on_hold.value
+    ):
+        raise HTTPException(
+            status_code=422,
+            detail="Say why you are approving an invoice that is on hold. It is paid the "
+            "correct amount, not the billed one.",
+        )
     try:
         transition(
             db,
@@ -170,7 +181,7 @@ def approve(db: firestore.Client, invoice_id: str, user: CurrentUser, comment: s
             actor=user.uid,
             action="approved",
             details=f"Approved by {user.email or user.uid}" + (f": {comment}" if comment else ""),
-            expected_from=InvoiceStatus.pending_approval,
+            expected_from=DECIDABLE,
             updates={
                 "approved_by": user.uid,
                 "approved_by_email": user.email,
@@ -191,7 +202,7 @@ def reject(db: firestore.Client, invoice_id: str, user: CurrentUser, reason: str
             actor=user.uid,
             action="rejected",
             details=f"Rejected by {user.email or user.uid}: {reason}",
-            expected_from=InvoiceStatus.pending_approval,
+            expected_from=DECIDABLE,
             updates={
                 "rejected_by": user.uid,
                 "rejected_by_email": user.email,
