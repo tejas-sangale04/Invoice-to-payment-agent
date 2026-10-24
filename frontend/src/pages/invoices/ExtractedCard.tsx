@@ -110,7 +110,7 @@ export function ExtractedCard({ inv }: { inv: Invoice }) {
 
         {inv.ai_usage && inv.ai_usage.calls > 0 && (
           <p className="text-xs text-muted-foreground">
-            Read by the agent in {inv.ai_usage.calls} call{inv.ai_usage.calls > 1 ? 's' : ''} ·{' '}
+            Gemini: {inv.ai_usage.calls} call{inv.ai_usage.calls > 1 ? 's' : ''} ·{' '}
             {(inv.ai_usage.input_tokens + inv.ai_usage.output_tokens).toLocaleString('en-IN')} tokens ·{' '}
             {(inv.ai_usage.latency_ms / 1000).toFixed(1)} s
           </p>

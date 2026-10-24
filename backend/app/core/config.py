@@ -51,6 +51,13 @@ class Settings(BaseSettings):
     extractor: Literal["gemini", "disabled"] = "gemini"
     gemini_model: str = "gemini-2.5-flash"
     gemini_timeout_seconds: float = 60
+    # Explanation and Resolution agents. Unset follows EXTRACTOR. "disabled" uses the
+    # explanation template and sends invoices without a PO number to a person.
+    exception_agents: Literal["gemini", "disabled"] | None = None
+
+    @property
+    def agents_enabled(self) -> bool:
+        return (self.exception_agents or self.extractor) == "gemini"
 
     @property
     def firebase_project(self) -> str:

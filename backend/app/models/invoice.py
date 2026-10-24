@@ -112,6 +112,17 @@ class MatchResult(BaseModel):
     difference_paise: int = 0  # invoice total minus the correct amount
 
 
+class Resolution(BaseModel):
+    """What the Resolution Agent proposed for an invoice without a PO number, and what code
+    found when it checked."""
+
+    proposed_po: str | None = None
+    reasoning: str | None = None
+    fitting_pos: list[str] = []  # open POs of the supplier that fit, by code's check
+    verified: bool = False
+    message: str = ""
+
+
 class AiUsage(BaseModel):
     """Recorded per invoice for the dashboard; summed over every model call."""
 
@@ -137,6 +148,8 @@ class Invoice(BaseModel):
     decision_reason: str | None = None
     decision_rule: str | None = None
     explanation: str | None = None
+    explanation_source: str | None = None  # "agent", or "template" when the agent's text failed
+    resolution: Resolution | None = None
     supplier_email_draft: str | None = None
     uploaded_by: str
     approved_by: str | None = None

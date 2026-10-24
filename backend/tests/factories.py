@@ -1,8 +1,11 @@
-"""Builders for extraction tests: a valid LlmInvoice and a scripted fake extractor."""
+"""Builders for agent tests: a valid LlmInvoice and scripted stand-ins for each agent."""
 
 import copy
 
+from app.agents.explanation import ExplanationCall, LlmExplanation
 from app.agents.extraction import ExtractionCall, parse_output
+from app.agents.resolution import LlmResolution, ResolutionCall
+from app.agents.runtime import parse_json
 from app.agents.schemas import LlmInvoice
 
 CONFIDENT = {
@@ -75,3 +78,45 @@ class FakeExtractor:
         text = response if isinstance(response, str) else json.dumps(response)
         parsed, error = parse_output(text)
         return ExtractionCall(parsed, error, input_tokens=1000, output_tokens=200, latency_ms=1500)
+
+
+class FakeExplainer:
+    """Explanation Agent stand-in: scripted answers (a dict, raw text or an exception) in
+    order. Records the facts and feedback it was given."""
+
+    def __init__(self, *responses: dict | str | Exception) -> None:
+        self.responses = list(responses)
+        self.facts: list[dict] = []
+        self.feedback: list[str | None] = []
+
+    def explain(self, facts: dict, feedback: str | None = None) -> ExplanationCall:
+        import json
+
+        self.facts.append(facts)
+        self.feedback.append(feedback)
+        response = self.responses.pop(0)
+        if isinstance(response, Exception):
+            raise response
+        text = response if isinstance(response, str) else json.dumps(response)
+        parsed, error = parse_json(text, LlmExplanation)
+        return ExplanationCall(parsed, error, input_tokens=400, output_tokens=150, latency_ms=800)
+
+
+class FakeResolver:
+    """Resolution Agent stand-in: runs `script(invoice, search)`, which may call the search
+    tool like the agent would, and returns its {"po_number", "reasoning"} answer."""
+
+    def __init__(self, script) -> None:
+        self.script = script
+        self.searches: list[dict] = []
+
+    def resolve(self, invoice: dict, search) -> ResolutionCall:
+        def recorded(**kwargs) -> dict:
+            result = search(**kwargs)
+            self.searches.append({"args": kwargs, "result": result})
+            return result
+
+        answer = self.script(invoice, recorded)
+        if isinstance(answer, Exception):
+            raise answer
+        return ResolutionCall(LlmResolution(**answer), None, 500, 100, 900)

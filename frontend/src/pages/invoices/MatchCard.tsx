@@ -37,6 +37,17 @@ export function MatchCard({ inv }: { inv: Invoice }) {
       <CardContent className="grid gap-4 px-2 text-sm">
         {!match && <EmptyState title="Not matched yet" />}
 
+        {inv.resolution?.proposed_po && (
+          <div className="mx-2 grid gap-1 rounded-md border bg-muted/40 p-3">
+            <p className="font-medium">
+              {inv.resolution.verified
+                ? `No PO number on the invoice. The agent found ${inv.resolution.proposed_po} and the checks confirmed it fits.`
+                : `No PO number on the invoice. The agent suggested ${inv.resolution.proposed_po}, but the checks didn't confirm it.`}
+            </p>
+            {inv.resolution.reasoning && <p className="text-muted-foreground">{inv.resolution.reasoning}</p>}
+          </div>
+        )}
+
         {generalIssues.length > 0 && (
           <ul className="mx-2 grid gap-2">
             {generalIssues.map((issue) => (

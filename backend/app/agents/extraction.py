@@ -5,7 +5,6 @@ output (app/pipeline/validate.py), and invalid output is never used.
 """
 
 import asyncio
-import json
 import time
 import uuid
 from dataclasses import dataclass
@@ -17,12 +16,10 @@ from google.adk.models.base_llm import BaseLlm
 from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
 from google.genai import types
-from pydantic import ValidationError
 
+from app.agents.runtime import APP_NAME, parse_json
 from app.agents.schemas import LlmInvoice
 from app.core.config import get_settings
-
-APP_NAME = "invoiceflow"
 
 INSTRUCTION = """
 You read supplier invoices for an Indian accounts-payable team. You will receive one invoice
@@ -68,19 +65,7 @@ class Extractor(Protocol):
 
 def parse_output(text: str) -> tuple[LlmInvoice | None, str | None]:
     """Validate the model's text against the schema. Never returns partially valid data."""
-    cleaned = text.strip()
-    if cleaned.startswith("```"):
-        cleaned = cleaned.split("\n", 1)[1] if "\n" in cleaned else ""
-        cleaned = cleaned.rsplit("```", 1)[0]
-    try:
-        return LlmInvoice.model_validate(json.loads(cleaned)), None
-    except json.JSONDecodeError as exc:
-        return None, f"The response was not valid JSON ({exc.msg})"
-    except ValidationError as exc:
-        problems = "; ".join(
-            f"{'.'.join(str(p) for p in err['loc'])}: {err['msg']}" for err in exc.errors()[:10]
-        )
-        return None, f"The response did not match the schema: {problems}"
+    return parse_json(text, LlmInvoice)
 
 
 def build_agent(model: str | BaseLlm) -> LlmAgent:
