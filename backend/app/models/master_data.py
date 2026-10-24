@@ -32,6 +32,16 @@ class SupplierCreate(BaseModel):
         return value
 
 
+class SupplierUpdate(BaseModel):
+    """What can change after a supplier is saved. The name stays, because invoices and POs
+    refer to it."""
+
+    email: EmailStr
+    gstin: Annotated[str, StringConstraints(strip_whitespace=True, to_upper=True)] | None = None
+
+    _gstin = field_validator("gstin")(SupplierCreate._gstin.__func__)  # same rule as on create
+
+
 class Supplier(BaseModel):
     supplier_id: str
     name: str

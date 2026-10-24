@@ -155,3 +155,28 @@ def test_business_rules_default_and_update(api: TestClient) -> None:
     assert api.get("/business-rules", headers=ADMIN).json() == new
     bad = {**new, "min_field_confidence": "1.5"}
     assert api.put("/business-rules", json=bad, headers=ADMIN).status_code == 422
+
+
+def test_an_admin_can_change_a_suppliers_email_and_gstin(api: TestClient) -> None:
+    sid = _supplier(api)["supplier_id"]
+    body = {"email": "accounts@sharmadairy.in", "gstin": "27abcde1234f1z5"}
+    res = api.put(f"/suppliers/{sid}", json=body, headers=ADMIN)
+    assert res.status_code == 200, res.text
+    assert (res.json()["email"], res.json()["gstin"]) == (
+        "accounts@sharmadairy.in",
+        "27ABCDE1234F1Z5",
+    )
+    assert res.json()["name"] == "Sharma Dairy Pvt Ltd"
+    listed = api.get("/suppliers", headers=STAFF).json()["items"][0]
+    assert listed["email"] == "accounts@sharmadairy.in"
+    cleared = api.put(f"/suppliers/{sid}", json={"email": "a@b.in", "gstin": None}, headers=ADMIN)
+    assert cleared.json()["gstin"] is None
+
+
+def test_supplier_edits_are_checked_and_admin_only(api: TestClient) -> None:
+    sid = _supplier(api)["supplier_id"]
+    assert api.put(f"/suppliers/{sid}", json={"email": "a@b.in"}, headers=STAFF).status_code == 403
+    assert api.put(f"/suppliers/{sid}", json={"email": "nope"}, headers=ADMIN).status_code == 422
+    bad = {"email": "a@b.in", "gstin": "123"}
+    assert api.put(f"/suppliers/{sid}", json=bad, headers=ADMIN).status_code == 422
+    assert api.put("/suppliers/SUP-99", json={"email": "a@b.in"}, headers=ADMIN).status_code == 404

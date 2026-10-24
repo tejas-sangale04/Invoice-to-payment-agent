@@ -66,6 +66,9 @@ export const listSuppliers = (limit = 100) => apiFetch<Page<Supplier>>(`/supplie
 export const createSupplier = (body: { name: string; email: string; gstin?: string }) =>
   apiFetch<Supplier>('/suppliers', { method: 'POST', body: JSON.stringify(body) })
 
+export const updateSupplier = (id: string, body: { email: string; gstin: string | null }) =>
+  apiFetch<Supplier>(`/suppliers/${encodeURIComponent(id)}`, { method: 'PUT', body: JSON.stringify(body) })
+
 export const listPurchaseOrders = (params: { status?: POStatus; cursor?: string | null; limit?: number } = {}) =>
   apiFetch<Page<PurchaseOrder>>(`/purchase-orders${qs({ limit: params.limit ?? 50, ...params })}`)
 export const getPurchaseOrder = (po: string) => apiFetch<PurchaseOrder>(`/purchase-orders/${encodeURIComponent(po)}`)

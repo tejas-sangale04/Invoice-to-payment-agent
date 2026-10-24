@@ -18,6 +18,7 @@ from app.models.master_data import (
     PurchaseOrderUpdate,
     Supplier,
     SupplierCreate,
+    SupplierUpdate,
 )
 from app.pipeline.money import line_amounts
 from app.services.counters import next_id
@@ -66,6 +67,14 @@ def create_supplier(db: firestore.Client, data: SupplierCreate) -> Supplier:
         return supplier
 
     return run(db.transaction())
+
+
+def update_supplier(db: firestore.Client, supplier_id: str, data: SupplierUpdate) -> Supplier:
+    ref = db.collection("suppliers").document(supplier_id)
+    if not ref.get().exists:
+        raise HTTPException(status_code=404, detail=f"{supplier_id} not found")
+    ref.update({"email": str(data.email), "gstin": data.gstin})
+    return Supplier(**ref.get().to_dict())
 
 
 def list_suppliers(db: firestore.Client, limit: int, cursor: str | None) -> Page[Supplier]:
