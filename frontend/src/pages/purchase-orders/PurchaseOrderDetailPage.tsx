@@ -51,6 +51,7 @@ export function PurchaseOrderDetailPage() {
                   <TableHead className="text-right">Ordered</TableHead>
                   <TableHead className="text-right">Received</TableHead>
                   <TableHead className="text-right">Still to come</TableHead>
+                  <TableHead className="text-right">Billed</TableHead>
                   <TableHead className="text-right">Unit price</TableHead>
                   <TableHead className="text-right">GST</TableHead>
                   <TableHead className="text-right">Amount</TableHead>
@@ -66,6 +67,7 @@ export function PurchaseOrderDetailPage() {
                     </TableCell>
                     <TableCell className="text-right tabular-nums">{formatQty(l.qty_received)}</TableCell>
                     <TableCell className="text-right tabular-nums">{remainingQty(l.qty, l.qty_received)}</TableCell>
+                    <TableCell className="text-right tabular-nums">{formatQty(l.qty_billed)}</TableCell>
                     <TableCell className="text-right tabular-nums">{formatPaise(l.unit_price_paise)}</TableCell>
                     <TableCell className="text-right tabular-nums">{formatQty(l.tax_rate)}%</TableCell>
                     <TableCell className="text-right tabular-nums">{formatPaise(l.line_total_paise + l.tax_paise)}</TableCell>
@@ -74,7 +76,7 @@ export function PurchaseOrderDetailPage() {
               </TableBody>
               <TableFooter>
                 <TableRow>
-                  <TableCell colSpan={7} className="text-right">
+                  <TableCell colSpan={8} className="text-right">
                     Subtotal {formatPaise(data.subtotal_paise)} · GST {formatPaise(data.tax_paise)} · Total
                   </TableCell>
                   <TableCell className="text-right tabular-nums">{formatPaise(data.total_paise)}</TableCell>

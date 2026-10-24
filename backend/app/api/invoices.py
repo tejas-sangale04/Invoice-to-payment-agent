@@ -6,8 +6,17 @@ from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, Qu
 from app.api.deps import Cursor, Db, Limit
 from app.core.config import get_settings
 from app.models.common import Page
-from app.models.invoice import AuditEntry, FileLink, Invoice, InvoiceStatus
+from app.models.invoice import (
+    ApproveRequest,
+    AuditEntry,
+    FileLink,
+    Invoice,
+    InvoiceStatus,
+    LedgerEntry,
+    RejectRequest,
+)
 from app.models.user import CurrentUser, Role
+from app.pipeline.post import post_invoice
 from app.pipeline.runner import AGENT
 from app.pipeline.status import transition
 from app.services import invoices as svc
@@ -94,6 +103,40 @@ def reprocess_invoice(
     invoice = svc.reprocess(db, invoice_id, user.uid)
     _enqueue_or_fail(db, invoice_id, background)
     return invoice
+
+
+@router.post("/invoices/{invoice_id}/approve", response_model=Invoice)
+def approve_invoice(
+    invoice_id: str,
+    db: Db,
+    background: BackgroundTasks,
+    body: ApproveRequest | None = None,
+    user: CurrentUser = Manager,
+) -> Invoice:
+    """Approve an invoice waiting for a manager, then post it to the ledger."""
+    svc.approve(db, invoice_id, user, body.comment if body else None)
+    try:
+        post_invoice(db, invoice_id, user.uid)
+    except Exception:
+        # Still approved; the pipeline posts it (and retries) from there.
+        logger.exception("Posting after approval failed", extra={"invoice_id": invoice_id})
+        _enqueue_or_fail(db, invoice_id, background)
+    return svc.get_invoice(db, invoice_id)
+
+
+@router.post("/invoices/{invoice_id}/reject", response_model=Invoice)
+def reject_invoice(
+    invoice_id: str, body: RejectRequest, db: Db, user: CurrentUser = Manager
+) -> Invoice:
+    return svc.reject(db, invoice_id, user, body.reason)
+
+
+@router.get("/ledger", response_model=Page[LedgerEntry], tags=["ledger"])
+def ledger(
+    db: Db, limit: Limit = 50, cursor: Cursor = None, _: CurrentUser = Manager
+) -> Page[LedgerEntry]:
+    """Posted invoices, newest first."""
+    return svc.list_ledger(db, limit, cursor)
 
 
 @router.get("/audit-log", response_model=Page[AuditEntry], tags=["audit"])

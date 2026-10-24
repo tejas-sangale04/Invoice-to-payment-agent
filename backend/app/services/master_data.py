@@ -84,6 +84,7 @@ def get_supplier(db: firestore.Client, supplier_id: str) -> Supplier | None:
 
 def _po_from_doc(doc: dict) -> PurchaseOrder:
     received: dict[str, str] = doc.get("received", {})
+    billed: dict[str, str] = doc.get("billed", {})
     lines, subtotal, tax = [], 0, 0
     for item in doc["items"]:
         qty, rate = Decimal(item["qty"]), Decimal(item["tax_rate"])
@@ -94,6 +95,7 @@ def _po_from_doc(doc: dict) -> PurchaseOrder:
             POLineView(
                 **{**item, "qty": qty, "tax_rate": rate},
                 qty_received=Decimal(received.get(item["line_id"], "0")),
+                qty_billed=Decimal(billed.get(item["line_id"], "0")),
                 line_total_paise=line_total,
                 tax_paise=line_tax,
             )

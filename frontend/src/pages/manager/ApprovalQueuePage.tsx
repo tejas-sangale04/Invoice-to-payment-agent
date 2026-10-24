@@ -24,8 +24,10 @@ function ApprovalCard({ inv }: { inv: Invoice }) {
   const done = (verb: string) => () => {
     toast.success(`Invoice ${inv.extracted?.invoice_no ?? inv.invoice_id} ${verb}`)
     qc.invalidateQueries({ queryKey: ['invoices'] })
+    qc.invalidateQueries({ queryKey: ['invoice', inv.invoice_id] })
+    qc.invalidateQueries({ queryKey: ['ledger'] })
   }
-  const approve = useMutation({ mutationFn: () => approveInvoice(inv.invoice_id, comment), onSuccess: done('approved') })
+  const approve = useMutation({ mutationFn: () => approveInvoice(inv.invoice_id, comment), onSuccess: done('approved and posted') })
   const reject = useMutation({ mutationFn: () => rejectInvoice(inv.invoice_id, comment), onSuccess: done('rejected') })
   const diff = inv.match_result?.difference_paise ?? 0
 
@@ -59,7 +61,7 @@ function ApprovalCard({ inv }: { inv: Invoice }) {
         </dl>
         {inv.decision_reason && <p>{inv.decision_reason}</p>}
         <Textarea aria-label="Comment" placeholder="Comment (required to reject)" value={comment} onChange={(e) => setComment(e.target.value)} />
-        {ownUpload && <p className="text-amber-700">You uploaded this invoice, so another manager has to approve it.</p>}
+        {ownUpload && <p className="text-amber-700">You uploaded this invoice, so another manager has to approve or reject it.</p>}
         {(approve.isError || reject.isError) && <ErrorState error={(approve.error ?? reject.error)!} />}
       </CardContent>
       <CardFooter className="justify-end gap-2">

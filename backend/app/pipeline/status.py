@@ -27,9 +27,10 @@ TRANSITIONS: dict[S, frozenset[S]] = {
             S.failed,
         }
     ),
-    S.auto_approved: frozenset({S.posted, S.failed}),
+    # Posting blocks an invoice whose supplier + invoice number is already in the ledger.
+    S.auto_approved: frozenset({S.posted, S.blocked_duplicate, S.failed}),
     S.pending_approval: frozenset({S.approved, S.rejected}),
-    S.approved: frozenset({S.posted, S.failed}),
+    S.approved: frozenset({S.posted, S.blocked_duplicate, S.failed}),
     S.posted: frozenset({S.paid}),
     # A manager can send these back through the pipeline ("reprocess").
     S.on_hold: frozenset({S.received}),
@@ -85,6 +86,33 @@ def write_audit(
     )
 
 
+def apply_transition(
+    tx: firestore.Transaction,
+    db: firestore.Client,
+    ref: firestore.DocumentReference,
+    current: S,
+    target: S,
+    actor: str,
+    action: str,
+    details: str | None = None,
+    updates: dict[str, Any] | None = None,
+) -> None:
+    """The writes of a status change, inside a transaction the caller has already checked
+    `current` in. For steps that change other documents in the same transaction (posting)."""
+    now = datetime.now(UTC)
+    tx.update(
+        ref,
+        {
+            **(updates or {}),
+            "status": target.value,
+            "status_reason": details,
+            "updated_at": now,
+            f"status_times.{target.value}": now,
+        },
+    )
+    write_audit(tx, db, ref.id, action, actor, current, target, details)
+
+
 def transition(
     db: firestore.Client,
     invoice_id: str,
@@ -117,18 +145,7 @@ def transition(
             current, target
         ):
             raise InvalidTransition(current, target)
-        now = datetime.now(UTC)
-        tx.update(
-            ref,
-            {
-                **(updates or {}),
-                "status": target.value,
-                "status_reason": details,
-                "updated_at": now,
-                f"status_times.{target.value}": now,
-            },
-        )
-        write_audit(tx, db, invoice_id, action, actor, current, target, details)
+        apply_transition(tx, db, ref, current, target, actor, action, details, updates)
         return current
 
     return run(db.transaction())

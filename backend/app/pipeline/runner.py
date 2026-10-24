@@ -17,6 +17,7 @@ from app.models.invoice import MatchIssueKind as K
 from app.pipeline import lookup
 from app.pipeline.decide import decide
 from app.pipeline.match import match_invoice, normalize_po_number
+from app.pipeline.post import post_invoice
 from app.pipeline.status import InvalidTransition, transition
 from app.pipeline.validate import check, to_extracted
 from app.services import rules as rules_svc
@@ -267,6 +268,12 @@ def _decide(db: firestore.Client, invoice_id: str) -> None:
     )
 
 
+def _post(db: firestore.Client, invoice_id: str) -> None:
+    """Auto-approved invoices are posted straight away. Approved ones are posted by the approve
+    request; this picks them up if that didn't finish."""
+    post_invoice(db, invoice_id, AGENT)
+
+
 # Status the invoice is in -> the step that moves it on. Statuses not listed are resting
 # states (waiting for a person, or finished), where the pipeline stops.
 STEPS: dict[S, Step] = {
@@ -275,6 +282,8 @@ STEPS: dict[S, Step] = {
     S.extracted: _validate,
     S.validated: _match,
     S.matched: _decide,
+    S.auto_approved: _post,
+    S.approved: _post,
 }
 
 _MAX_STEPS = 20  # guards against a step that fails to move the invoice on
