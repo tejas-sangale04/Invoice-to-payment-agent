@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Plus } from 'lucide-react'
+import { Pencil, Plus } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { toast } from 'sonner'
 
@@ -11,9 +11,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { createSupplier, listSuppliers } from '@/lib/api'
+import { createSupplier, listSuppliers, updateSupplier } from '@/lib/api'
 import { formatDate } from '@/lib/format'
 import { hasRole } from '@/lib/roles'
+import type { Supplier } from '@/lib/types'
 
 function AddSupplierForm({ onDone }: { onDone: () => void }) {
   const qc = useQueryClient()
@@ -72,9 +73,65 @@ function AddSupplierForm({ onDone }: { onDone: () => void }) {
   )
 }
 
+function EditSupplierForm({ supplier, onDone }: { supplier: Supplier; onDone: () => void }) {
+  const qc = useQueryClient()
+  const [email, setEmail] = useState(supplier.email)
+  const [gstin, setGstin] = useState(supplier.gstin ?? '')
+  const mutation = useMutation({
+    mutationFn: () => updateSupplier(supplier.supplier_id, { email, gstin: gstin.trim() || null }),
+    onSuccess: (s) => {
+      toast.success(`Saved ${s.name}`)
+      qc.invalidateQueries({ queryKey: ['suppliers'] })
+      onDone()
+    },
+  })
+
+  return (
+    <Card className="mb-6">
+      <CardHeader>
+        <CardTitle className="text-base">
+          Edit {supplier.name} ({supplier.supplier_id})
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <form
+          onSubmit={(e: FormEvent) => {
+            e.preventDefault()
+            mutation.mutate()
+          }}
+          className="grid gap-4 sm:grid-cols-2"
+        >
+          <div className="grid gap-2">
+            <Label htmlFor="e-email">Accounts email</Label>
+            <Input id="e-email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="e-gstin">GSTIN (optional)</Label>
+            <Input id="e-gstin" maxLength={15} placeholder="27ABCDE1234F1Z5" value={gstin} onChange={(e) => setGstin(e.target.value)} />
+          </div>
+          {mutation.isError && (
+            <div className="sm:col-span-2">
+              <ErrorState error={mutation.error} />
+            </div>
+          )}
+          <div className="flex gap-2 sm:col-span-2">
+            <Button type="submit" disabled={mutation.isPending}>
+              {mutation.isPending ? 'Saving…' : 'Save changes'}
+            </Button>
+            <Button type="button" variant="ghost" onClick={onDone}>
+              Cancel
+            </Button>
+          </div>
+        </form>
+      </CardContent>
+    </Card>
+  )
+}
+
 export function SuppliersPage() {
   const { role } = useAuth()
   const [adding, setAdding] = useState(false)
+  const [editing, setEditing] = useState<Supplier | null>(null)
   const suppliers = useQuery({ queryKey: ['suppliers'], queryFn: () => listSuppliers() })
   const isAdmin = hasRole(role, 'admin')
 
@@ -93,6 +150,7 @@ export function SuppliersPage() {
         }
       />
       {adding && <AddSupplierForm onDone={() => setAdding(false)} />}
+      {editing && <EditSupplierForm key={editing.supplier_id} supplier={editing} onDone={() => setEditing(null)} />}
       <Card className="py-2">
         <CardContent className="px-2">
           {suppliers.isPending && <LoadingState />}
@@ -107,6 +165,7 @@ export function SuppliersPage() {
                   <TableHead>Email</TableHead>
                   <TableHead>GSTIN</TableHead>
                   <TableHead>Added</TableHead>
+                  {isAdmin && <TableHead className="w-12" />}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -117,6 +176,13 @@ export function SuppliersPage() {
                     <TableCell>{s.email}</TableCell>
                     <TableCell className="font-mono text-xs">{s.gstin ?? '—'}</TableCell>
                     <TableCell>{formatDate(s.created_at)}</TableCell>
+                    {isAdmin && (
+                      <TableCell>
+                        <Button variant="ghost" size="icon" aria-label={`Edit ${s.name}`} onClick={() => { setAdding(false); setEditing(s) }}>
+                          <Pencil />
+                        </Button>
+                      </TableCell>
+                    )}
                   </TableRow>
                 ))}
               </TableBody>
