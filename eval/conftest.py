@@ -54,7 +54,7 @@ def pytest_configure(config: pytest.Config) -> None:
             "  firebase emulators:start --only firestore,auth --project demo-invoiceflow\n"
             "then in this one set the variable and run again:\n"
             "  Windows cmd:  set FIRESTORE_EMULATOR_HOST=127.0.0.1:8080\n"
-            "  PowerShell:   $env:FIRESTORE_EMULATOR_HOST=\"127.0.0.1:8080\"\n"
+            '  PowerShell:   $env:FIRESTORE_EMULATOR_HOST="127.0.0.1:8080"\n'
             "  macOS/Linux:  export FIRESTORE_EMULATOR_HOST=127.0.0.1:8080"
         )
     s = get_settings()
