@@ -29,6 +29,7 @@ function ApprovalCard({ inv }: { inv: Invoice }) {
     qc.invalidateQueries({ queryKey: ['invoice', inv.invoice_id] })
     qc.invalidateQueries({ queryKey: ['ledger'] })
   }
+  const held = inv.status === 'on_hold'
   const approve = useMutation({ mutationFn: () => approveInvoice(inv.invoice_id, comment), onSuccess: done('approved and posted') })
   const [email, setEmail] = useState(() => initialEmail(inv))
   const target = useEmailTarget(inv)
@@ -54,7 +55,7 @@ function ApprovalCard({ inv }: { inv: Invoice }) {
           </CardTitle>
           <p className="text-sm text-muted-foreground">{inv.extracted?.po_number ?? 'No PO number'}</p>
         </div>
-        {inv.decision && <StatusBadge status={inv.decision} />}
+        <StatusBadge status={held ? 'on_hold' : (inv.decision ?? inv.status)} />
       </CardHeader>
       <CardContent className="grid gap-3 text-sm">
         <dl className="grid grid-cols-3 gap-4">
@@ -72,7 +73,13 @@ function ApprovalCard({ inv }: { inv: Invoice }) {
           </div>
         </dl>
         {inv.decision_reason && <p>{inv.decision_reason}</p>}
-        <Textarea aria-label="Comment" placeholder="Comment (required to reject)" value={comment} onChange={(e) => setComment(e.target.value)} />
+        {held && (
+          <p className="text-amber-700">
+            This invoice is on hold. If you approve it, only the correct amount ({inv.match_result ? formatPaise(inv.match_result.correct_amount_paise) : '—'}) is paid, not the billed
+            amount, and no email goes to the supplier. Rejecting it can email the supplier.
+          </p>
+        )}
+        <Textarea aria-label="Comment" placeholder={held ? 'Comment (required to approve or reject)' : 'Comment (required to reject)'} value={comment} onChange={(e) => setComment(e.target.value)} />
         <SupplierEmailEditor inv={inv} value={email} onChange={setEmail} rejected />
         {ownUpload && <p className="text-amber-700">You uploaded this invoice, so another manager has to approve or reject it.</p>}
         {(approve.isError || reject.isError) && <ErrorState error={(approve.error ?? reject.error)!} />}
@@ -81,8 +88,8 @@ function ApprovalCard({ inv }: { inv: Invoice }) {
         <Button variant="outline" disabled={ownUpload || !comment.trim() || (emailing && !emailReady(email)) || reject.isPending} onClick={() => reject.mutate()}>
           <X /> {emailing ? 'Reject and email' : 'Reject'}
         </Button>
-        <Button disabled={ownUpload || approve.isPending} onClick={() => approve.mutate()}>
-          <Check /> Approve
+        <Button disabled={ownUpload || (held && !comment.trim()) || approve.isPending} onClick={() => approve.mutate()}>
+          <Check /> {held ? 'Approve and pay correct amount' : 'Approve'}
         </Button>
       </CardFooter>
     </Card>
@@ -91,11 +98,19 @@ function ApprovalCard({ inv }: { inv: Invoice }) {
 
 export function ApprovalQueuePage() {
   const live = FEATURES.approvals.live
-  const queue = useQuery({ queryKey: ['invoices', 'pending_approval'], queryFn: () => listInvoices({ status: 'pending_approval' }), enabled: live })
+  // Invoices waiting for a decision, and held ones a manager may override.
+  const queue = useQuery({
+    queryKey: ['invoices', 'approval-queue'],
+    queryFn: async () => {
+      const [waiting, held] = await Promise.all([listInvoices({ status: 'pending_approval' }), listInvoices({ status: 'on_hold' })])
+      return { items: [...waiting.items, ...held.items] }
+    },
+    enabled: live,
+  })
 
   return (
     <>
-      <PageHeader title="Approval queue" description="Invoices the agent sent for a manager decision." />
+      <PageHeader title="Approval queue" description="Invoices the agent sent for a manager decision, and invoices on hold that you can still approve or reject." />
       {!live && <NotLiveNotice feature="approvals" />}
       {!live && (
         <Card>
