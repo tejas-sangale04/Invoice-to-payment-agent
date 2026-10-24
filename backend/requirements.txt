@@ -13,3 +13,5 @@ google-adk==2.2.0
 google-genai==2.11.0
 # google-adk caps opentelemetry-api at 1.41.1; newer google-api-core needs >=1.44.
 google-api-core==2.34.0
+# Pipeline trace spans (installed by google-adk; pinned to its cap)
+opentelemetry-api==1.41.1

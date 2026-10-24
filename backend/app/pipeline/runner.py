@@ -6,11 +6,14 @@ invoice on through `transition`, which is idempotent, so running a step twice is
 """
 
 import logging
+import time
 from collections.abc import Callable
 
 from google.cloud import firestore
+from opentelemetry import trace
 
 from app.agents import extraction
+from app.core.logging import log_context
 from app.models.invoice import AiUsage, Decision, Extracted, MatchIssue, MatchResult
 from app.models.invoice import InvoiceStatus as S
 from app.models.invoice import MatchIssueKind as K
@@ -26,6 +29,8 @@ from app.services import rules as rules_svc
 from app.services import storage as storage_svc
 
 logger = logging.getLogger(__name__)
+# Spans are no-ops unless an OpenTelemetry SDK and exporter are configured (e.g. Cloud Trace).
+tracer = trace.get_tracer("invoiceflow.pipeline")
 
 AGENT = "agent"
 Step = Callable[[firestore.Client, str], None]
@@ -316,14 +321,30 @@ def run_steps(db: firestore.Client, invoice_id: str) -> S:
         step = STEPS.get(status)
         if step is None:
             return status
-        logger.info("Running step", extra={"invoice_id": invoice_id, "step": status.value})
-        step(db, invoice_id)
+        with (
+            log_context(step=status.value),
+            tracer.start_as_current_span(
+                f"pipeline.{step.__name__.lstrip('_')}",
+                attributes={"invoice_id": invoice_id, "from_status": status.value},
+            ),
+        ):
+            logger.info("Running step")
+            started = time.monotonic()
+            step(db, invoice_id)
+            # Time per step, summed over retries and reprocessing, for the dashboard.
+            ms = int((time.monotonic() - started) * 1000)
+            ref.update({f"step_ms.{step.__name__.lstrip('_')}": firestore.Increment(ms)})
     raise RuntimeError(f"Pipeline did not settle after {_MAX_STEPS} steps")
 
 
 def process_invoice(db: firestore.Client, invoice_id: str, attempt: int, max_attempts: int) -> S:
     """Run the pipeline once. Raises on error so the caller (Cloud Tasks) retries, except on
     the last attempt, where the invoice is marked failed so a person picks it up."""
+    with log_context(invoice_id=invoice_id):
+        return _process(db, invoice_id, attempt, max_attempts)
+
+
+def _process(db: firestore.Client, invoice_id: str, attempt: int, max_attempts: int) -> S:
     db.collection("invoices").document(invoice_id).update(
         {"processing_attempts": firestore.Increment(1)}
     )
