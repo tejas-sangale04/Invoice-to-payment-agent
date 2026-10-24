@@ -28,7 +28,7 @@ export function PurchaseOrderDetailPage() {
     <>
       <PageHeader
         title={data.po_number}
-        description={`${data.supplier_name} · created ${formatDate(data.created_at)}`}
+        description={`${data.supplier_name}${data.po_ref ? ` · invoice reference ${data.po_ref}` : ''} · created ${formatDate(data.created_at)}`}
         actions={
           <div className="flex items-center gap-2">
             {hasRole(role, 'manager') && data.status === 'open' && data.items.every((l) => Number(l.qty_billed) === 0) && (

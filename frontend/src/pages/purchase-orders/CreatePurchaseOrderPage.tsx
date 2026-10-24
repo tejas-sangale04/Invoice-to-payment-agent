@@ -43,6 +43,7 @@ function PurchaseOrderForm({ po }: { po?: PurchaseOrder }) {
   const qc = useQueryClient()
   const suppliers = useQuery({ queryKey: ['suppliers'], queryFn: () => listSuppliers() })
   const [supplierId, setSupplierId] = useState(po?.supplier_id ?? '')
+  const [poRef, setPoRef] = useState(po?.po_ref ?? '')
   const [lines, setLines] = useState<Line[]>(() =>
     po
       ? po.items.map((l) => ({ key: nextKey++, name: l.name, qty: l.qty, unit: l.unit, price: (l.unit_price_paise / 100).toFixed(2), tax_rate: String(Number(l.tax_rate)) }))
@@ -51,8 +52,8 @@ function PurchaseOrderForm({ po }: { po?: PurchaseOrder }) {
   const [formError, setFormError] = useState<string | null>(null)
 
   const mutation = useMutation({
-    mutationFn: (body: { supplier_id: string; items: POItemInput[] }) =>
-      po ? updatePurchaseOrder(po.po_number, body.items) : createPurchaseOrder(body),
+    mutationFn: (body: { supplier_id: string; po_ref?: string; items: POItemInput[] }) =>
+      po ? updatePurchaseOrder(po.po_number, body.items, body.po_ref) : createPurchaseOrder(body),
     onSuccess: (saved) => {
       toast.success(`${saved.po_number} ${po ? 'updated' : 'created'}`)
       qc.invalidateQueries({ queryKey: ['purchase-orders'] })
@@ -81,7 +82,7 @@ function PurchaseOrderForm({ po }: { po?: PurchaseOrder }) {
       if (!computed[i] || Number(l.qty) <= 0) return setFormError(`Line ${i + 1}: enter a quantity above 0 (up to 3 decimals)`)
       items.push({ name: l.name, qty: l.qty.trim(), unit: l.unit, unit_price_paise: price, tax_rate: l.tax_rate })
     }
-    mutation.mutate({ supplier_id: supplierId, items })
+    mutation.mutate({ supplier_id: supplierId, po_ref: poRef.trim() || undefined, items })
   }
 
   return (
@@ -106,6 +107,13 @@ function PurchaseOrderForm({ po }: { po?: PurchaseOrder }) {
                   </option>
                 ))}
               </NativeSelect>
+              <Label htmlFor="po-ref" className="mt-2">
+                PO number on the supplier's invoice (optional)
+              </Label>
+              <Input id="po-ref" maxLength={40} placeholder="e.g. KF/ORD/88" value={poRef} onChange={(e) => setPoRef(e.target.value)} />
+              <p className="text-sm text-muted-foreground">
+                The app numbers purchase orders itself (PO-1, PO-2, ...). If the supplier's invoice will quote a different number, enter it here and the invoice matches this PO.
+              </p>
               {suppliers.data?.items.length === 0 && (
                 <p className="text-sm text-muted-foreground">
                   No suppliers yet. An admin can add one on the <Link to="/suppliers" className="underline">Suppliers</Link> page.

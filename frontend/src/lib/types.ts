@@ -30,6 +30,7 @@ export interface POLine {
 
 export interface PurchaseOrder {
   po_number: string
+  po_ref: string | null
   supplier_id: string
   supplier_name: string
   status: POStatus
