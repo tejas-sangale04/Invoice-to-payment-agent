@@ -54,6 +54,12 @@ class Settings(BaseSettings):
     # Explanation and Resolution agents. Unset follows EXTRACTOR. "disabled" uses the
     # explanation template and sends invoices without a PO number to a person.
     exception_agents: Literal["gemini", "disabled"] | None = None
+    # Estimating AI cost on the dashboard from the tokens recorded per invoice. Defaults are
+    # the Gemini 2.5 Flash list prices on Vertex AI (USD per million tokens); set them to
+    # your contract prices and exchange rate.
+    gemini_input_usd_per_mtok: float = 0.30
+    gemini_output_usd_per_mtok: float = 2.50
+    usd_to_inr: float = 88.0
 
     @property
     def agents_enabled(self) -> bool:

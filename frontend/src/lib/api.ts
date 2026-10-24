@@ -93,11 +93,25 @@ export const saveBusinessRules = (body: BusinessRules) =>
 // ---- Invoice endpoints (Setup guide, Section 9). Screens only call these once FEATURES says they're live. ----
 
 export interface DashboardMetrics {
+  invoices_uploaded: number
   invoices_processed: number
   decision_counts: Record<string, number>
+  status_counts: Record<string, number>
+  waiting_for_approval: number
+  posted_count: number
+  posted_paise: number
   money_saved_paise: number
+  duplicates_blocked: number
+  duplicates_blocked_paise: number
   avg_processing_seconds: number | null
+  avg_step_seconds: Record<string, number>
+  avg_ai_calls: number | null
+  avg_tokens: number | null
+  avg_ai_latency_seconds: number | null
   avg_ai_cost_paise: number | null
+  ai_price_note: string
+  retried_invoices: number
+  daily: { date: string; uploaded: number; decided: number }[]
 }
 
 export const listInvoices = (params: { status?: InvoiceStatus; cursor?: string | null } = {}) =>

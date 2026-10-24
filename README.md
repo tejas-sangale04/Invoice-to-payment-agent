@@ -16,9 +16,10 @@ The full specification and build plan is in [PROJECT_CONTEXT.md](PROJECT_CONTEXT
 | 5 | Matching and decisions: duplicate check, supplier and PO lookup, 3-way match with partial deliveries and GST, decision rules | Done |
 | 6 | Approval and posting: approval queue, separation of duties, one-time ledger posting, PO billing | Done |
 | 7 | Agentic exceptions: Resolution Agent for missing PO numbers, Explanation Agent with number check and template fallback | Done |
-| 8 to 10 | Dashboard, evaluation, deployment | Not started |
+| 8 | Dashboard and observability: metrics, JSON logs with invoice id and step, trace spans, per-step timing, AI cost | Done |
+| 9 to 10 | Evaluation, deployment | Not started |
 
-Screens whose backend is not built yet (the dashboard) show a notice naming the phase that switches them on and make no API calls. Each is turned on by one flag in `frontend/src/lib/features.ts`.
+Every screen is now live. `frontend/src/lib/features.ts` still holds a flag per screen.
 
 ## What works today
 
@@ -42,6 +43,8 @@ Screens whose backend is not built yet (the dashboard) show a notice naming the 
 - Invoices without a PO number go to the Resolution Agent (ADK, Gemini), which searches the supplier's open POs with a tool and proposes one. Code then checks it: every line must be on the PO in the same unit with enough left to bill (a PO whose deliveries cover the invoice beats one that was only ordered), and it must be the only PO that fits. Otherwise the invoice goes to a person. An invoice matched this way always needs a manager.
 - Every invoice that isn't auto-approved gets a plain-language explanation and, when the supplier needs to act (an overcharge, a wrong GST rate, a duplicate, a missing PO number), a draft email. The Explanation Agent writes them from facts code prepares; code then checks that the key amounts (invoice total, correct amount, difference) appear and that no other amount does. A failed check goes back to the agent once, then a template is used. Explanations never decide anything.
 - With `EXCEPTION_AGENTS=disabled` (or `EXTRACTOR=disabled`) the template is used and invoices without a PO number go to a person.
+- The manager dashboard (`GET /dashboard/metrics`) is worked out from the stored invoices and ledger: invoices processed, the decision breakdown, amount posted, overcharges caught (on held invoices, and the part above the PO price on invoices paid at the PO price), duplicates blocked, average time from upload to decision and per pipeline step, retries, and model calls, tokens and Gemini time per invoice. AI cost is the recorded tokens at the prices in `GEMINI_INPUT_USD_PER_MTOK`, `GEMINI_OUTPUT_USD_PER_MTOK` and `USD_TO_INR` (defaults: Gemini 2.5 Flash list prices and Rs 88 per $); change them to your own.
+- Every log line from the pipeline is JSON with the `invoice_id` and `step`, including lines from the agents. Each pipeline step runs in an OpenTelemetry span (`pipeline.extract` and so on), which is a no-op until an exporter such as Cloud Trace is set up in Phase 10.
 - Posting is one Firestore transaction: it creates `ledger_entries/{supplier_id}_{invoice_no}`, adds the billed quantities to the PO (open → partially billed → fully billed) and moves the invoice to `posted`. If that key is already in the ledger nothing is posted, so an invoice is paid once even if two copies are approved at the same moment (there is an emulator test for that). The amount posted is the correct amount, at no more than the PO price.
 
 ## Background processing and file storage

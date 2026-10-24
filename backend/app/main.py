@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import files, health, invoices, master_data, rules, tasks, users
+from app.api import dashboard, files, health, invoices, master_data, rules, tasks, users
 from app.core.config import get_settings
 from app.core.errors import register_error_handlers
 from app.core.logging import configure_logging
@@ -25,6 +25,7 @@ def create_app() -> FastAPI:
     app.include_router(master_data.router)
     app.include_router(rules.router)
     app.include_router(invoices.router)
+    app.include_router(dashboard.router)
     app.include_router(tasks.router)
     app.include_router(files.router)
     return app
