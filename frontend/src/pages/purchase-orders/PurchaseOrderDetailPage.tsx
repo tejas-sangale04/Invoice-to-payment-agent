@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { Truck } from 'lucide-react'
+import { Pencil, Truck } from 'lucide-react'
 import { Link, useParams } from 'react-router-dom'
 
 import { PageHeader } from '@/components/PageHeader'
@@ -8,11 +8,14 @@ import { StatusBadge } from '@/components/StatusBadge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { useAuth } from '@/auth/AuthProvider'
 import { getPurchaseOrder, listGoodsReceipts } from '@/lib/api'
+import { hasRole } from '@/lib/roles'
 import { formatDate, formatPaise, formatQty, remainingQty } from '@/lib/format'
 
 export function PurchaseOrderDetailPage() {
   const { poNumber = '' } = useParams()
+  const { role } = useAuth()
   const po = useQuery({ queryKey: ['purchase-order', poNumber], queryFn: () => getPurchaseOrder(poNumber) })
   const receipts = useQuery({ queryKey: ['goods-receipts', poNumber], queryFn: () => listGoodsReceipts(poNumber) })
 
@@ -27,13 +30,22 @@ export function PurchaseOrderDetailPage() {
         title={data.po_number}
         description={`${data.supplier_name} · created ${formatDate(data.created_at)}`}
         actions={
-          data.status !== 'closed' && (
-            <Button asChild>
-              <Link to={`/deliveries/new?po=${data.po_number}`}>
-                <Truck /> Record delivery
-              </Link>
-            </Button>
-          )
+          <div className="flex items-center gap-2">
+            {hasRole(role, 'manager') && data.status === 'open' && data.items.every((l) => Number(l.qty_billed) === 0) && (
+              <Button variant="outline" asChild>
+                <Link to={`/purchase-orders/${data.po_number}/edit`}>
+                  <Pencil /> Edit
+                </Link>
+              </Button>
+            )}
+            {data.status !== 'closed' && (
+              <Button asChild>
+                <Link to={`/deliveries/new?po=${data.po_number}`}>
+                  <Truck /> Record delivery
+                </Link>
+              </Button>
+            )}
+          </div>
         }
       />
       <div className="grid gap-6">

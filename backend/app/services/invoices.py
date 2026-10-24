@@ -203,6 +203,55 @@ def reject(db: firestore.Client, invoice_id: str, user: CurrentUser, reason: str
     return get_invoice(db, invoice_id)
 
 
+# ------------------------------------------------------------------- delete
+
+DELETABLE = frozenset(
+    {
+        InvoiceStatus.needs_review,
+        InvoiceStatus.failed,
+        InvoiceStatus.on_hold,
+        InvoiceStatus.pending_approval,
+        InvoiceStatus.rejected,
+        InvoiceStatus.blocked_duplicate,
+    }
+)
+
+
+def delete_invoice(db: firestore.Client, invoice_id: str, user: CurrentUser) -> None:
+    """Remove an invoice that was never posted, so a corrected copy can be uploaded. Posted
+    invoices are in the ledger and stay. The audit log keeps the history, plus a 'deleted'
+    entry. (The file is kept: copies of the same file share it.)"""
+    ref = db.collection("invoices").document(invoice_id)
+
+    @firestore.transactional
+    def run(tx: firestore.Transaction) -> None:
+        snap = ref.get(transaction=tx)
+        if not snap.exists:
+            raise HTTPException(status_code=404, detail=f"{invoice_id} not found")
+        doc = snap.to_dict()
+        status = InvoiceStatus(doc["status"])
+        if status not in DELETABLE:
+            raise HTTPException(
+                status_code=409,
+                detail="Only invoices that haven't been paid can be deleted, and not while one "
+                f"is being read or posted (this one is {status.value.replace('_', ' ')}).",
+            )
+        no = (doc.get("extracted") or {}).get("invoice_no") or doc.get("file_name") or invoice_id
+        write_audit(
+            tx,
+            db,
+            invoice_id,
+            "deleted",
+            user.uid,
+            status,
+            None,
+            f"Deleted by {user.email or user.uid} ({no}, was {status.value.replace('_', ' ')})",
+        )
+        tx.delete(ref)
+
+    run(db.transaction())
+
+
 # ------------------------------------------------------------- supplier emails
 
 EMAILABLE = frozenset(

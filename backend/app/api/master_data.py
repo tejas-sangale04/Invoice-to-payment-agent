@@ -8,6 +8,7 @@ from app.models.master_data import (
     POStatus,
     PurchaseOrder,
     PurchaseOrderCreate,
+    PurchaseOrderUpdate,
     Supplier,
     SupplierCreate,
 )
@@ -18,6 +19,7 @@ from app.services.auth import require_role
 router = APIRouter()
 
 Staff = Depends(require_role(Role.staff))
+Manager = Depends(require_role(Role.manager))
 Admin = Depends(require_role(Role.admin))
 
 
@@ -59,6 +61,13 @@ def get_purchase_order(po_number: str, db: Db, _: CurrentUser = Staff) -> Purcha
     if po is None:
         raise HTTPException(status_code=404, detail=f"{po_number} not found")
     return po
+
+
+@router.put("/purchase-orders/{po_number}", response_model=PurchaseOrder, tags=["purchase orders"])
+def update_purchase_order(
+    po_number: str, body: PurchaseOrderUpdate, db: Db, user: CurrentUser = Manager
+) -> PurchaseOrder:
+    return svc.update_purchase_order(db, po_number, body, user.uid)
 
 
 @router.post(
