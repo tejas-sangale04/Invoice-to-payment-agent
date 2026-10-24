@@ -147,6 +147,23 @@ export interface Extracted {
   field_confidence: Record<string, number>
 }
 
+/** The last email sent (or tried) to the supplier about an invoice. */
+export interface SentEmail {
+  to: string
+  subject: string
+  body: string
+  status: 'sent' | 'failed'
+  error: string | null
+  by: string
+  by_email: string | null
+  at: string
+}
+
+export interface EmailStatus {
+  enabled: boolean
+  sender: string | null
+}
+
 export interface Invoice {
   invoice_id: string
   status: InvoiceStatus
@@ -166,6 +183,7 @@ export interface Invoice {
   explanation_source: 'agent' | 'template' | null
   resolution: Resolution | null
   supplier_email_draft: string | null
+  supplier_email: SentEmail | null
   uploaded_by: string
   approved_by: string | null
   approved_by_email: string | null

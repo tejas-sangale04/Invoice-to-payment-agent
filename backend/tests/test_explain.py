@@ -157,3 +157,18 @@ def test_an_unasked_for_email_is_dropped(explainer) -> None:
     explainer({"explanation": text, "supplier_email": "Subject: hi"})
     out = explain(*above_limit(), AiUsage())
     assert (out.source, out.explanation, out.supplier_email) == ("agent", text, None)
+
+
+def test_a_rejection_is_worded_as_one() -> None:
+    e, result, outcome = held()
+    f = facts(e, result, outcome, rejected=True)
+    assert f["rejected"] is True
+    t = template(f)
+    assert "We have rejected this invoice and it will not be paid as it stands." in t.supplier_email
+    assert "rejected" not in template(facts(e, result, outcome)).supplier_email
+
+
+def test_the_agent_is_told_when_the_email_is_a_rejection(explainer) -> None:
+    fake = explainer(GOOD)
+    explain(*held(), AiUsage(), True)
+    assert fake.facts[0]["rejected"] is True

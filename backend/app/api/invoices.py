@@ -9,17 +9,21 @@ from app.models.common import Page
 from app.models.invoice import (
     ApproveRequest,
     AuditEntry,
+    EmailDraft,
+    EmailStatus,
     FileLink,
     Invoice,
     InvoiceStatus,
     LedgerEntry,
     RejectRequest,
+    SupplierEmail,
 )
 from app.models.user import CurrentUser, Role
 from app.pipeline.post import post_invoice
 from app.pipeline.runner import AGENT
 from app.pipeline.status import transition
 from app.services import invoices as svc
+from app.services import mailer
 from app.services.auth import require_role
 from app.services.files import MAX_BYTES, InvalidFile
 from app.services.storage import Storage, get_storage
@@ -128,7 +132,36 @@ def approve_invoice(
 def reject_invoice(
     invoice_id: str, body: RejectRequest, db: Db, user: CurrentUser = Manager
 ) -> Invoice:
-    return svc.reject(db, invoice_id, user, body.reason)
+    if body.email:
+        # Refuse before rejecting if the email can't go out, so nothing is half done.
+        svc.email_recipient(db, svc.get_invoice_doc(db, invoice_id))
+    invoice = svc.reject(db, invoice_id, user, body.reason)
+    if body.email:
+        invoice = svc.email_supplier(db, invoice_id, user, body.email)
+    return invoice
+
+
+@router.post("/invoices/{invoice_id}/email-supplier", response_model=Invoice)
+def email_supplier(
+    invoice_id: str, body: SupplierEmail, db: Db, user: CurrentUser = Manager
+) -> Invoice:
+    """Email the supplier on file about this invoice. The recipient is never taken from the
+    request: it is the invoice's supplier."""
+    return svc.email_supplier(db, invoice_id, user, body)
+
+
+@router.post("/invoices/{invoice_id}/email-draft", response_model=EmailDraft)
+def email_draft(
+    invoice_id: str, db: Db, rejected: bool = False, _: CurrentUser = Manager
+) -> EmailDraft:
+    """The Explanation Agent writes the email to the supplier. Nothing is sent: a manager reads
+    it first. `rejected=true` words it as a rejection."""
+    return svc.draft_supplier_email(db, invoice_id, rejected)
+
+
+@router.get("/email-status", response_model=EmailStatus, tags=["email"])
+def email_status(_: CurrentUser = Manager) -> EmailStatus:
+    return EmailStatus(enabled=mailer.get_mailer() is not None, sender=mailer.display_sender())
 
 
 @router.get("/ledger", response_model=Page[LedgerEntry], tags=["ledger"])

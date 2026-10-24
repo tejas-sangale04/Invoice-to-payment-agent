@@ -35,7 +35,9 @@ Rules:
    "supplier_action" says. Describe problems only as in "problems_for_supplier": never mention
    our internal checks, other invoices or the agent. Sign off as "Accounts Payable". No
    placeholders such as [Name].
-4. Never say the invoice is approved or will be paid.
+4. Never say the invoice is approved or will be paid. If "rejected" is true, the supplier email
+   says plainly that the invoice has been rejected and will not be paid as it stands, then
+   asks for what "supplier_action" says.
 """.strip()
 
 

@@ -50,7 +50,11 @@ class Explanation:
         }
 
 
-def facts(extracted: Extracted, result: MatchResult, outcome: Outcome) -> dict:
+def facts(
+    extracted: Extracted, result: MatchResult, outcome: Outcome, rejected: bool = False
+) -> dict:
+    """`rejected`: a manager is rejecting the invoice and wants an email to the supplier, even
+    when the checks alone wouldn't have asked the supplier to do anything."""
     total = extracted.total_paise
     overcharged = result.matched_po is not None and result.difference_paise > 0
     required = [p for p in (total,) if p is not None]
@@ -69,6 +73,8 @@ def facts(extracted: Extracted, result: MatchResult, outcome: Outcome) -> dict:
         action = "Please send a revised invoice with the GST rate on the purchase order."
     elif MatchIssueKind.no_po in kinds:
         action = "Please tell us the purchase order number for this invoice."
+    elif rejected:
+        action = "Please check the invoice and send a corrected one, or contact us if it is right."
     else:
         action = None
     # What the supplier is told: no internal ids, checks or agent details.
@@ -92,7 +98,10 @@ def facts(extracted: Extracted, result: MatchResult, outcome: Outcome) -> dict:
         "correct_amount": rupees(result.correct_amount_paise) if result.matched_po else None,
         "difference": rupees(result.difference_paise) if overcharged else None,
         "amounts_to_mention": [rupees(p) for p in required],
-        "next_step": NEXT_STEP[outcome.decision],
+        "rejected": rejected,
+        "next_step": "The invoice has been rejected and won't be paid."
+        if rejected
+        else NEXT_STEP[outcome.decision],
         "write_supplier_email": action is not None,
         "supplier_action": action,
     }
@@ -142,6 +151,8 @@ def template(f: dict) -> Explanation:
             "",
             f"We received your invoice {f['invoice_no']} for {f['invoice_total']}{po}.",
         ]
+        if f["rejected"]:
+            lines += ["", "We have rejected this invoice and it will not be paid as it stands."]
         if f["problems_for_supplier"]:
             lines += ["", "We found the following:"]
             lines += [f"- {p}" for p in f["problems_for_supplier"]]
@@ -157,11 +168,15 @@ def template(f: dict) -> Explanation:
 
 
 def explain(
-    extracted: Extracted, result: MatchResult, outcome: Outcome, usage: AiUsage
+    extracted: Extracted,
+    result: MatchResult,
+    outcome: Outcome,
+    usage: AiUsage,
+    rejected: bool = False,
 ) -> Explanation:
     """Write the explanation and supplier email for a decision. Model calls are added to
     `usage`. Never raises because of the model: the template is the fallback."""
-    f = facts(extracted, result, outcome)
+    f = facts(extracted, result, outcome, rejected)
     explainer = explanation.get_explainer()
     if explainer is None:
         return template(f)
