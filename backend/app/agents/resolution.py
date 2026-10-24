@@ -21,8 +21,9 @@ from app.core.config import get_settings
 
 INSTRUCTION = """
 You find the buyer's purchase order (PO) for a supplier invoice that has no PO number printed
-on it. You get the invoice as JSON. Use the search_open_purchase_orders tool to look through
-the supplier's open POs; you may call it more than once, for example with one item name, or
+on it, or whose PO number is not one of ours (suppliers often print their own reference). You
+get the invoice as JSON. Use the search_open_purchase_orders tool to look through the
+supplier's open POs; you may call it more than once, for example with one item name, or
 without filters.
 
 A PO fits when every invoice line is on it (names can differ in wording, e.g. "Milk" and

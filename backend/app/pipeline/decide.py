@@ -74,7 +74,10 @@ def decide(result: MatchResult, total_paise: int, rules: BusinessRules) -> Outco
         return outcome(
             Decision.manager_approval,
             "matched_without_po_number",
-            [f"The invoice has no PO number; it was matched to {result.matched_po} by the agent"],
+            [
+                "The invoice's PO number is missing or isn't one of ours; it was matched to "
+                f"{result.matched_po} by the agent"
+            ],
         )
     # Possibly the same invoice sent twice under a new number: a person should look.
     if found := messages(K.possible_duplicate):

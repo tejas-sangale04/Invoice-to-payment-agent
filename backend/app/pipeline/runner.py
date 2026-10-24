@@ -202,8 +202,9 @@ def _match(db: firestore.Client, invoice_id: str) -> None:
         po = lookup.get_po(db, po_number) if po_number else None
         if supplier.problem:
             issues.append(MatchIssue(kind=K.supplier, message=supplier.problem))
-        if not e.po_number and supplier.supplier and not supplier.problem:
-            # The Resolution Agent searches the supplier's open POs; code checks its pick.
+        if (not e.po_number or po is None) and supplier.supplier and not supplier.problem:
+            # No PO number, or one that isn't ours (a supplier's own reference): the Resolution
+            # Agent searches the supplier's open POs; code checks its pick.
             po, resolution = resolve(
                 db, me, e, supplier.supplier, rules.price_tolerance_percent, usage
             )
