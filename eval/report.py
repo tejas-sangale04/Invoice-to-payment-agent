@@ -167,31 +167,8 @@ def _cases(items: list[dict]) -> str:
     return ", ".join(f"{i['case']} (run {i['run']})" for i in items) or "none"
 
 
-def markdown(s: dict) -> str:
-    m = s["meta"]
-    measured = m["agents"] == "gemini"
-    out = [
-        f"# InvoiceFlow evaluation, {m['started_at']}",
-        "",
-        f"- Agents: **{m['agents']}**"
-        + (f" ({m['model']} on Vertex AI)" if measured else " (ground-truth stand-ins, no Gemini)"),
-        f"- Test set: {SPLITS[m['split']]}, {s['cases']} cases, {m['runs_per_case']} run(s) each "
-        f"= {s['runs']} runs",
-        f"- Business rules: price tolerance {m['rules']['price_tolerance_percent']}%, "
-        f"auto-approve limit Rs {m['rules']['auto_approve_max_paise'] / 100:,.0f}, "
-        f"min field confidence {m['rules']['min_field_confidence']}",
-        f"- Code: {m['git']}",
-        "",
-    ]
-    if not measured:
-        out += [
-            "> With `--agents oracle` the Gemini agents are replaced by stand-ins that return the "
-            "ground truth, so this run checks validation, matching, decisions, approval, posting "
-            "and the end state, but says nothing about Gemini's accuracy, explanations or cost. "
-            "Run with `--agents gemini` for those numbers.",
-            "",
-        ]
-
+def _case_sections(s: dict, m: dict, measured: bool) -> list[str]:
+    out: list[str] = []
     sf = s["safety"]
     out += ["## Safety", ""]
     checks = [
@@ -301,6 +278,47 @@ def markdown(s: dict) -> str:
             "",
         ]
 
+    out += ["## Wrong decisions", ""]
+    if s["mismatches"]:
+        rows = []
+        for x in s["mismatches"]:
+            why = x["detail"]["reason"] or "; ".join(x["detail"]["issues"]) or ""
+            rows.append([x["case"], x["run"], x["expected"], x["decision"], why.replace("|", "/")])
+        out += _table(["Case", "Run", "Expected", "Actual", "Why"], rows)
+    else:
+        out += ["None.", ""]
+    return out
+
+
+def markdown(s: dict) -> str:
+    m = s["meta"]
+    measured = m["agents"] == "gemini"
+    out = [
+        f"# InvoiceFlow evaluation, {m['started_at']}",
+        "",
+        f"- Agents: **{m['agents']}**"
+        + (f" ({m['model']} on Vertex AI)" if measured else " (ground-truth stand-ins, no Gemini)"),
+        f"- Test set: {SPLITS[m['split']]}, {s['cases']} cases, {m['runs_per_case']} run(s) each "
+        f"= {s['runs']} runs",
+        f"- Business rules: price tolerance {m['rules']['price_tolerance_percent']}%, "
+        f"auto-approve limit Rs {m['rules']['auto_approve_max_paise'] / 100:,.0f}, "
+        f"min field confidence {m['rules']['min_field_confidence']}",
+        f"- Code: {m['git']}",
+        "",
+    ]
+    if not measured:
+        out += [
+            "> With `--agents oracle` the Gemini agents are replaced by stand-ins that return the "
+            "ground truth, so this run checks validation, matching, decisions, approval, posting "
+            "and the end state, but says nothing about Gemini's accuracy, explanations or cost. "
+            "Run with `--agents gemini` for those numbers.",
+            "",
+        ]
+
+    if s["runs"]:
+        out += _case_sections(s, m, measured)
+    else:
+        out += ["No test-set cases were run.", ""]
     out += ["## Failure injection", ""]
     if s["failure_injection"]:
         out += _table(
@@ -311,15 +329,6 @@ def markdown(s: dict) -> str:
     else:
         out += ["Not run.", ""]
 
-    out += ["## Wrong decisions", ""]
-    if s["mismatches"]:
-        rows = []
-        for x in s["mismatches"]:
-            why = x["detail"]["reason"] or "; ".join(x["detail"]["issues"]) or ""
-            rows.append([x["case"], x["run"], x["expected"], x["decision"], why.replace("|", "/")])
-        out += _table(["Case", "Run", "Expected", "Actual", "Why"], rows)
-    else:
-        out += ["None.", ""]
     return "\n".join(out)
 
 

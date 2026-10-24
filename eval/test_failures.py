@@ -164,7 +164,7 @@ def test_same_invoice_uploaded_twice_at_once(evaluation, world, monkeypatch, sam
 
     monkeypatch.setattr(invoices_api, "enqueue_processing", lambda *a: None)
     outcomes = []
-    for attempt in range(3):
+    for attempt in range(5):
         clear_firestore()
         build_world(evaluation.api, WORLD)
         world(*[invoice_json()] * 4)
@@ -181,17 +181,28 @@ def test_same_invoice_uploaded_twice_at_once(evaluation, world, monkeypatch, sam
             t.start()
         for t in threads:
             t.join()
+        notes = []
+        for i in ids:
+            inv = call(evaluation.api, "GET", f"/invoices/{i}", STAFF)
+            if inv["status"] == "pending_approval":
+                # Both copies were matched at the same moment, so the second was only flagged
+                # as a possible duplicate. A manager who approves it anyway must not pay twice.
+                call(evaluation.api, "POST", f"/invoices/{i}/approve", MANAGER, json={})
+                notes.append(f"one held for a manager ({inv['decision_rule']}), then approved")
         statuses = sorted(
             call(evaluation.api, "GET", f"/invoices/{i}", STAFF)["status"] for i in ids
         )
-        outcomes.append((statuses, len(state(evaluation.api)["ledger"])))
+        outcomes.append((statuses, len(state(evaluation.api)["ledger"]), notes))
     kind = "same file" if same_file else "two scans of one invoice"
     record(
         evaluation,
-        f"Same invoice uploaded twice concurrently ({kind}, 3 tries)",
-        "one ledger entry; the other copy blocked as a duplicate",
-        "; ".join(f"{'/'.join(s)}, {n} entry" for s, n in outcomes),
-        all(s == ["blocked_duplicate", "posted"] and n == 1 for s, n in outcomes),
+        f"Same invoice uploaded twice concurrently ({kind}, 5 tries)",
+        "one ledger entry; the other copy blocked as a duplicate, at the latest when posting",
+        "; ".join(
+            f"{'/'.join(s)}, {n} entry" + (f" ({', '.join(notes)})" if notes else "")
+            for s, n, notes in outcomes
+        ),
+        all(s == ["blocked_duplicate", "posted"] and n == 1 for s, n, _ in outcomes),
     )
 
 
