@@ -1,0 +1,165 @@
+{
+  "id": "missing_po_one_match-02",
+  "kind": "missing_po_one_match",
+  "split": "dev",
+  "description": "Konkan Fresh Produce LLP: no PO number printed; the other PO has the same items, nothing delivered yet",
+  "world": {
+    "suppliers": [
+      {
+        "key": "konkan",
+        "name": "Konkan Fresh Produce LLP",
+        "email": "billing@konkanfresh.example.in",
+        "gstin": "27AAKFK5678M1Z2"
+      }
+    ],
+    "purchase_orders": [
+      {
+        "po_number": "PO-1",
+        "supplier": "konkan",
+        "items": [
+          {
+            "name": "Onions",
+            "qty": "50",
+            "unit": "kg",
+            "unit_price_paise": 2800,
+            "tax_rate": "0"
+          },
+          {
+            "name": "Green chillies",
+            "qty": "2",
+            "unit": "kg",
+            "unit_price_paise": 8000,
+            "tax_rate": "0"
+          }
+        ]
+      },
+      {
+        "po_number": "PO-2",
+        "supplier": "konkan",
+        "items": [
+          {
+            "name": "Onions",
+            "qty": "25",
+            "unit": "kg",
+            "unit_price_paise": 2800,
+            "tax_rate": "0"
+          },
+          {
+            "name": "Green chillies",
+            "qty": "2",
+            "unit": "kg",
+            "unit_price_paise": 8000,
+            "tax_rate": "0"
+          }
+        ]
+      }
+    ],
+    "receipts": [
+      {
+        "po_number": "PO-1",
+        "items": [
+          {
+            "line_id": "1",
+            "qty_received": "50"
+          },
+          {
+            "line_id": "2",
+            "qty_received": "2"
+          }
+        ]
+      }
+    ]
+  },
+  "prior": [],
+  "invoice": {
+    "file": "invoice.pdf",
+    "layout": 2,
+    "messy": null,
+    "same_file_as_prior": false,
+    "reading": {
+      "supplier_name": "Konkan Fresh Produce LLP",
+      "supplier_gstin": "27AAKFK5678M1Z2",
+      "invoice_no": "KFP/26-27/6715",
+      "invoice_date": "2026-10-04",
+      "po_number": null,
+      "items": [
+        {
+          "name": "Onions",
+          "qty": "50",
+          "unit": "kg",
+          "unit_price": "28.00",
+          "tax_rate": "0",
+          "amount": "1,400.00"
+        },
+        {
+          "name": "Green chillies",
+          "qty": "2",
+          "unit": "kg",
+          "unit_price": "80.00",
+          "tax_rate": "0",
+          "amount": "160.00"
+        }
+      ],
+      "subtotal": "1,560.00",
+      "cgst": "0.00",
+      "sgst": "0.00",
+      "igst": null,
+      "total": "1,560.00",
+      "field_confidence": {
+        "supplier_name": 1.0,
+        "invoice_no": 1.0,
+        "invoice_date": 1.0,
+        "po_number": 1.0,
+        "line_items": 1.0,
+        "totals": 1.0
+      }
+    },
+    "fields": {
+      "supplier_name": "Konkan Fresh Produce LLP",
+      "supplier_gstin": "27AAKFK5678M1Z2",
+      "invoice_no": "KFP/26-27/6715",
+      "invoice_date": "2026-10-04",
+      "po_number": null,
+      "items": [
+        {
+          "qty": "50",
+          "unit_price_paise": 2800,
+          "tax_rate": "0",
+          "amount_paise": 140000
+        },
+        {
+          "qty": "2",
+          "unit_price_paise": 8000,
+          "tax_rate": "0",
+          "amount_paise": 16000
+        }
+      ],
+      "subtotal_paise": 156000,
+      "gst_paise": {
+        "cgst": 0,
+        "sgst": 0,
+        "igst": 0
+      },
+      "total_paise": 156000
+    }
+  },
+  "expect": {
+    "decision": "manager_approval",
+    "rule": "matched_without_po_number",
+    "status": "posted",
+    "po_number": "PO-1",
+    "correct_amount_paise": 156000,
+    "invoice_total_paise": 156000,
+    "approve": true,
+    "ledger": [
+      {
+        "invoice_no": "KFP/26-27/6715",
+        "amount_paise": 156000
+      }
+    ],
+    "po_status": {
+      "PO-1": "fully_billed",
+      "PO-2": "open"
+    }
+  }
+}

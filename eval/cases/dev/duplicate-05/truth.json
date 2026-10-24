@@ -1,0 +1,188 @@
+{
+  "id": "duplicate-05",
+  "kind": "duplicate",
+  "split": "dev",
+  "description": "Konkan Fresh Produce LLP: the same invoice re-issued in another layout, number written with '/'",
+  "world": {
+    "suppliers": [
+      {
+        "key": "konkan",
+        "name": "Konkan Fresh Produce LLP",
+        "email": "billing@konkanfresh.example.in",
+        "gstin": "27AAKFK5678M1Z2"
+      }
+    ],
+    "purchase_orders": [
+      {
+        "po_number": "PO-1",
+        "supplier": "konkan",
+        "items": [
+          {
+            "name": "Tomatoes",
+            "qty": "40",
+            "unit": "kg",
+            "unit_price_paise": 3200,
+            "tax_rate": "0"
+          },
+          {
+            "name": "Coriander",
+            "qty": "30",
+            "unit": "bunch",
+            "unit_price_paise": 1500,
+            "tax_rate": "0"
+          }
+        ]
+      }
+    ],
+    "receipts": [
+      {
+        "po_number": "PO-1",
+        "items": [
+          {
+            "line_id": "1",
+            "qty_received": "40"
+          },
+          {
+            "line_id": "2",
+            "qty_received": "30"
+          }
+        ]
+      }
+    ]
+  },
+  "prior": [
+    {
+      "file": "prior-1.pdf",
+      "invoice_no": "KFP/26-27/1883",
+      "reading": {
+        "supplier_name": "Konkan Fresh Produce LLP",
+        "supplier_gstin": "27AAKFK5678M1Z2",
+        "invoice_no": "KFP/26-27/1883",
+        "invoice_date": "2026-10-02",
+        "po_number": "PO-1",
+        "items": [
+          {
+            "name": "Tomatoes",
+            "qty": "40",
+            "unit": "kg",
+            "unit_price": "32.00",
+            "tax_rate": "0%",
+            "amount": "1,280.00"
+          },
+          {
+            "name": "Coriander bunches",
+            "qty": "30",
+            "unit": "bunch",
+            "unit_price": "15.00",
+            "tax_rate": "0%",
+            "amount": "450.00"
+          }
+        ],
+        "subtotal": "1,730.00",
+        "cgst": "0.00",
+        "sgst": "0.00",
+        "igst": null,
+        "total": "1,730.00",
+        "field_confidence": {
+          "supplier_name": 1.0,
+          "invoice_no": 1.0,
+          "invoice_date": 1.0,
+          "po_number": 1.0,
+          "line_items": 1.0,
+          "totals": 1.0
+        }
+      },
+      "expect_status": "posted"
+    }
+  ],
+  "invoice": {
+    "file": "invoice.pdf",
+    "layout": 2,
+    "messy": null,
+    "same_file_as_prior": false,
+    "reading": {
+      "supplier_name": "Konkan Fresh Produce LLP",
+      "supplier_gstin": "27AAKFK5678M1Z2",
+      "invoice_no": "KFP/26/27/1883",
+      "invoice_date": "2026-10-02",
+      "po_number": "PO-1",
+      "items": [
+        {
+          "name": "Tomatoes",
+          "qty": "40",
+          "unit": "kg",
+          "unit_price": "32.00",
+          "tax_rate": "0",
+          "amount": "1,280.00"
+        },
+        {
+          "name": "Coriander bunches",
+          "qty": "30",
+          "unit": "bunch",
+          "unit_price": "15.00",
+          "tax_rate": "0",
+          "amount": "450.00"
+        }
+      ],
+      "subtotal": "1,730.00",
+      "cgst": "0.00",
+      "sgst": "0.00",
+      "igst": null,
+      "total": "1,730.00",
+      "field_confidence": {
+        "supplier_name": 1.0,
+        "invoice_no": 1.0,
+        "invoice_date": 1.0,
+        "po_number": 1.0,
+        "line_items": 1.0,
+        "totals": 1.0
+      }
+    },
+    "fields": {
+      "supplier_name": "Konkan Fresh Produce LLP",
+      "supplier_gstin": "27AAKFK5678M1Z2",
+      "invoice_no": "KFP/26/27/1883",
+      "invoice_date": "2026-10-02",
+      "po_number": "PO-1",
+      "items": [
+        {
+          "qty": "40",
+          "unit_price_paise": 3200,
+          "tax_rate": "0",
+          "amount_paise": 128000
+        },
+        {
+          "qty": "30",
+          "unit_price_paise": 1500,
+          "tax_rate": "0",
+          "amount_paise": 45000
+        }
+      ],
+      "subtotal_paise": 173000,
+      "gst_paise": {
+        "cgst": 0,
+        "sgst": 0,
+        "igst": 0
+      },
+      "total_paise": 173000
+    }
+  },
+  "expect": {
+    "decision": "block",
+    "rule": "duplicate",
+    "status": "blocked_duplicate",
+    "po_number": "PO-1",
+    "correct_amount_paise": null,
+    "invoice_total_paise": 173000,
+    "approve": false,
+    "ledger": [
+      {
+        "invoice_no": "KFP/26-27/1883",
+        "amount_paise": 173000
+      }
+    ],
+    "po_status": {
+      "PO-1": "fully_billed"
+    }
+  }
+}

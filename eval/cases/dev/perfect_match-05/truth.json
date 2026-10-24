@@ -1,0 +1,119 @@
+{
+  "id": "perfect_match-05",
+  "kind": "perfect_match",
+  "split": "dev",
+  "description": "CleanPro Hygiene Solutions: 1 line(s), all delivered, billed at PO prices",
+  "world": {
+    "suppliers": [
+      {
+        "key": "cleanpro",
+        "name": "CleanPro Hygiene Solutions",
+        "email": "ar@cleanpro.example.in",
+        "gstin": "27AAECC2468H1Z6"
+      }
+    ],
+    "purchase_orders": [
+      {
+        "po_number": "PO-1",
+        "supplier": "cleanpro",
+        "items": [
+          {
+            "name": "Hand sanitizer",
+            "qty": "5",
+            "unit": "L",
+            "unit_price_paise": 22000,
+            "tax_rate": "18"
+          }
+        ]
+      }
+    ],
+    "receipts": [
+      {
+        "po_number": "PO-1",
+        "items": [
+          {
+            "line_id": "1",
+            "qty_received": "5"
+          }
+        ]
+      }
+    ]
+  },
+  "prior": [],
+  "invoice": {
+    "file": "invoice.pdf",
+    "layout": 1,
+    "messy": null,
+    "same_file_as_prior": false,
+    "reading": {
+      "supplier_name": "CleanPro Hygiene Solutions",
+      "supplier_gstin": "27AAECC2468H1Z6",
+      "invoice_no": "CP-8942",
+      "invoice_date": "2026-10-22",
+      "po_number": "PO/1",
+      "items": [
+        {
+          "name": "Hand sanitizer",
+          "qty": "5",
+          "unit": "L",
+          "unit_price": "220.00",
+          "tax_rate": "18%",
+          "amount": "1,100.00"
+        }
+      ],
+      "subtotal": "1,100.00",
+      "cgst": "99.00",
+      "sgst": "99.00",
+      "igst": null,
+      "total": "1,298.00",
+      "field_confidence": {
+        "supplier_name": 1.0,
+        "invoice_no": 1.0,
+        "invoice_date": 1.0,
+        "po_number": 1.0,
+        "line_items": 1.0,
+        "totals": 1.0
+      }
+    },
+    "fields": {
+      "supplier_name": "CleanPro Hygiene Solutions",
+      "supplier_gstin": "27AAECC2468H1Z6",
+      "invoice_no": "CP-8942",
+      "invoice_date": "2026-10-22",
+      "po_number": "PO/1",
+      "items": [
+        {
+          "qty": "5",
+          "unit_price_paise": 22000,
+          "tax_rate": "18",
+          "amount_paise": 110000
+        }
+      ],
+      "subtotal_paise": 110000,
+      "gst_paise": {
+        "cgst": 9900,
+        "sgst": 9900,
+        "igst": 0
+      },
+      "total_paise": 129800
+    }
+  },
+  "expect": {
+    "decision": "auto_approve",
+    "rule": "all_matched",
+    "status": "posted",
+    "po_number": "PO-1",
+    "correct_amount_paise": 129800,
+    "invoice_total_paise": 129800,
+    "approve": false,
+    "ledger": [
+      {
+        "invoice_no": "CP-8942",
+        "amount_paise": 129800
+      }
+    ],
+    "po_status": {
+      "PO-1": "fully_billed"
+    }
+  }
+}

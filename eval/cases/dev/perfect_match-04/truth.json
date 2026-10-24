@@ -1,0 +1,194 @@
+{
+  "id": "perfect_match-04",
+  "kind": "perfect_match",
+  "split": "dev",
+  "description": "Surat Packaging Industries: 4 line(s), all delivered, billed at PO prices",
+  "world": {
+    "suppliers": [
+      {
+        "key": "surat",
+        "name": "Surat Packaging Industries",
+        "email": "sales@suratpack.example.in",
+        "gstin": "24AAGFS8765P1Z3"
+      }
+    ],
+    "purchase_orders": [
+      {
+        "po_number": "PO-1",
+        "supplier": "surat",
+        "items": [
+          {
+            "name": "Paper cups 250 ml",
+            "qty": "3000",
+            "unit": "pcs",
+            "unit_price_paise": 240,
+            "tax_rate": "18"
+          },
+          {
+            "name": "Cup lids",
+            "qty": "2000",
+            "unit": "pcs",
+            "unit_price_paise": 110,
+            "tax_rate": "18"
+          },
+          {
+            "name": "Kraft paper bags",
+            "qty": "1000",
+            "unit": "pcs",
+            "unit_price_paise": 450,
+            "tax_rate": "18"
+          },
+          {
+            "name": "Corrugated boxes",
+            "qty": "200",
+            "unit": "pcs",
+            "unit_price_paise": 1800,
+            "tax_rate": "12"
+          }
+        ]
+      }
+    ],
+    "receipts": [
+      {
+        "po_number": "PO-1",
+        "items": [
+          {
+            "line_id": "1",
+            "qty_received": "3000"
+          },
+          {
+            "line_id": "2",
+            "qty_received": "2000"
+          },
+          {
+            "line_id": "3",
+            "qty_received": "1000"
+          },
+          {
+            "line_id": "4",
+            "qty_received": "200"
+          }
+        ]
+      }
+    ]
+  },
+  "prior": [],
+  "invoice": {
+    "file": "invoice.pdf",
+    "layout": 4,
+    "messy": null,
+    "same_file_as_prior": false,
+    "reading": {
+      "supplier_name": "Surat Packaging Industries",
+      "supplier_gstin": "24AAGFS8765P1Z3",
+      "invoice_no": "SPI/2026/6721",
+      "invoice_date": "2026-10-01",
+      "po_number": "PO-1",
+      "items": [
+        {
+          "name": "Paper cups 250 ml",
+          "qty": "3000",
+          "unit": "pcs",
+          "unit_price": "2.40",
+          "tax_rate": "18",
+          "amount": "7,200.00"
+        },
+        {
+          "name": "Cup lids",
+          "qty": "2000",
+          "unit": "pcs",
+          "unit_price": "1.10",
+          "tax_rate": "18",
+          "amount": "2,200.00"
+        },
+        {
+          "name": "Kraft paper bags",
+          "qty": "1000",
+          "unit": "pcs",
+          "unit_price": "4.50",
+          "tax_rate": "18",
+          "amount": "4,500.00"
+        },
+        {
+          "name": "Corrugated boxes",
+          "qty": "200",
+          "unit": "pcs",
+          "unit_price": "18.00",
+          "tax_rate": "12",
+          "amount": "3,600.00"
+        }
+      ],
+      "subtotal": "17,500.00",
+      "cgst": null,
+      "sgst": null,
+      "igst": "2,934.00",
+      "total": "20,434.00",
+      "field_confidence": {
+        "supplier_name": 1.0,
+        "invoice_no": 1.0,
+        "invoice_date": 1.0,
+        "po_number": 1.0,
+        "line_items": 1.0,
+        "totals": 1.0
+      }
+    },
+    "fields": {
+      "supplier_name": "Surat Packaging Industries",
+      "supplier_gstin": "24AAGFS8765P1Z3",
+      "invoice_no": "SPI/2026/6721",
+      "invoice_date": "2026-10-01",
+      "po_number": "PO-1",
+      "items": [
+        {
+          "qty": "3000",
+          "unit_price_paise": 240,
+          "tax_rate": "18",
+          "amount_paise": 720000
+        },
+        {
+          "qty": "2000",
+          "unit_price_paise": 110,
+          "tax_rate": "18",
+          "amount_paise": 220000
+        },
+        {
+          "qty": "1000",
+          "unit_price_paise": 450,
+          "tax_rate": "18",
+          "amount_paise": 450000
+        },
+        {
+          "qty": "200",
+          "unit_price_paise": 1800,
+          "tax_rate": "12",
+          "amount_paise": 360000
+        }
+      ],
+      "subtotal_paise": 1750000,
+      "gst_paise": {
+        "cgst": 0,
+        "sgst": 0,
+        "igst": 293400
+      },
+      "total_paise": 2043400
+    }
+  },
+  "expect": {
+    "decision": "auto_approve",
+    "rule": "all_matched",
+    "status": "posted",
+    "po_number": "PO-1",
+    "correct_amount_paise": 2043400,
+    "invoice_total_paise": 2043400,
+    "approve": false,
+    "ledger": [
+      {
+        "invoice_no": "SPI/2026/6721",
+        "amount_paise": 2043400
+      }
+    ],
+    "po_status": {
+      "PO-1": "fully_billed"
+    }
+  }
+}

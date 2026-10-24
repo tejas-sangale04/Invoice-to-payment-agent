@@ -1,0 +1,139 @@
+{
+  "id": "blurry_or_missing_field-01",
+  "kind": "blurry_or_missing_field",
+  "split": "dev",
+  "description": "Bengaluru Bean Roasters Pvt Ltd: no invoice number printed",
+  "world": {
+    "suppliers": [
+      {
+        "key": "bean",
+        "name": "Bengaluru Bean Roasters Pvt Ltd",
+        "email": "invoices@bbroasters.example.in",
+        "gstin": "29AABCB4321K1Z8"
+      }
+    ],
+    "purchase_orders": [
+      {
+        "po_number": "PO-1",
+        "supplier": "bean",
+        "items": [
+          {
+            "name": "Robusta coffee beans",
+            "qty": "4",
+            "unit": "kg",
+            "unit_price_paise": 98000,
+            "tax_rate": "5"
+          },
+          {
+            "name": "Cold brew concentrate",
+            "qty": "10",
+            "unit": "L",
+            "unit_price_paise": 60000,
+            "tax_rate": "12"
+          }
+        ]
+      }
+    ],
+    "receipts": [
+      {
+        "po_number": "PO-1",
+        "items": [
+          {
+            "line_id": "1",
+            "qty_received": "4"
+          },
+          {
+            "line_id": "2",
+            "qty_received": "10"
+          }
+        ]
+      }
+    ]
+  },
+  "prior": [],
+  "invoice": {
+    "file": "invoice.jpg",
+    "layout": 1,
+    "messy": "scan",
+    "same_file_as_prior": false,
+    "reading": {
+      "supplier_name": "Bengaluru Bean Roasters Private Limited",
+      "supplier_gstin": "29AABCB4321K1Z8",
+      "invoice_no": null,
+      "invoice_date": "2026-10-07",
+      "po_number": "PO-1",
+      "items": [
+        {
+          "name": "Robusta beans",
+          "qty": "4",
+          "unit": "kg",
+          "unit_price": "980.00",
+          "tax_rate": "5%",
+          "amount": "3,920.00"
+        },
+        {
+          "name": "Cold brew concentrate",
+          "qty": "10",
+          "unit": "L",
+          "unit_price": "600.00",
+          "tax_rate": "12%",
+          "amount": "6,000.00"
+        }
+      ],
+      "subtotal": "9,920.00",
+      "cgst": null,
+      "sgst": null,
+      "igst": "916.00",
+      "total": "10,836.00",
+      "field_confidence": {
+        "supplier_name": 1.0,
+        "invoice_no": 1.0,
+        "invoice_date": 1.0,
+        "po_number": 1.0,
+        "line_items": 1.0,
+        "totals": 1.0
+      }
+    },
+    "fields": {
+      "supplier_name": "Bengaluru Bean Roasters Private Limited",
+      "supplier_gstin": "29AABCB4321K1Z8",
+      "invoice_no": null,
+      "invoice_date": "2026-10-07",
+      "po_number": "PO-1",
+      "items": [
+        {
+          "qty": "4",
+          "unit_price_paise": 98000,
+          "tax_rate": "5",
+          "amount_paise": 392000
+        },
+        {
+          "qty": "10",
+          "unit_price_paise": 60000,
+          "tax_rate": "12",
+          "amount_paise": 600000
+        }
+      ],
+      "subtotal_paise": 992000,
+      "gst_paise": {
+        "cgst": 0,
+        "sgst": 0,
+        "igst": 91600
+      },
+      "total_paise": 1083600
+    }
+  },
+  "expect": {
+    "decision": "needs_review",
+    "rule": null,
+    "status": "needs_review",
+    "po_number": "PO-1",
+    "correct_amount_paise": null,
+    "invoice_total_paise": 1083600,
+    "approve": false,
+    "ledger": [],
+    "po_status": {
+      "PO-1": "open"
+    }
+  }
+}

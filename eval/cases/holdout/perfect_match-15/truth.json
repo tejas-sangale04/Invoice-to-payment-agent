@@ -1,0 +1,144 @@
+{
+  "id": "perfect_match-15",
+  "kind": "perfect_match",
+  "split": "holdout",
+  "description": "Nilgiri Tea Estates Co: 2 line(s), all delivered, billed at PO prices",
+  "world": {
+    "suppliers": [
+      {
+        "key": "nilgiri",
+        "name": "Nilgiri Tea Estates Co",
+        "email": "accounts@nilgiritea.example.in",
+        "gstin": "33AADCN9753T1Z1"
+      }
+    ],
+    "purchase_orders": [
+      {
+        "po_number": "PO-1",
+        "supplier": "nilgiri",
+        "items": [
+          {
+            "name": "Assam CTC tea",
+            "qty": "10",
+            "unit": "kg",
+            "unit_price_paise": 52000,
+            "tax_rate": "5"
+          },
+          {
+            "name": "Masala chai premix",
+            "qty": "5",
+            "unit": "kg",
+            "unit_price_paise": 38000,
+            "tax_rate": "18"
+          }
+        ]
+      }
+    ],
+    "receipts": [
+      {
+        "po_number": "PO-1",
+        "items": [
+          {
+            "line_id": "1",
+            "qty_received": "10"
+          },
+          {
+            "line_id": "2",
+            "qty_received": "5"
+          }
+        ]
+      }
+    ]
+  },
+  "prior": [],
+  "invoice": {
+    "file": "invoice.pdf",
+    "layout": 3,
+    "messy": null,
+    "same_file_as_prior": false,
+    "reading": {
+      "supplier_name": "Nilgiri Tea Estates Co",
+      "supplier_gstin": "33AADCN9753T1Z1",
+      "invoice_no": "NTE/INV/7017",
+      "invoice_date": "2026-10-14",
+      "po_number": "PO/1",
+      "items": [
+        {
+          "name": "CTC tea leaves",
+          "qty": "10",
+          "unit": "kg",
+          "unit_price": "520.00",
+          "tax_rate": "5",
+          "amount": "5200.00"
+        },
+        {
+          "name": "Masala chai premix",
+          "qty": "5",
+          "unit": "kg",
+          "unit_price": "380.00",
+          "tax_rate": "18",
+          "amount": "1900.00"
+        }
+      ],
+      "subtotal": "7100.00",
+      "cgst": null,
+      "sgst": null,
+      "igst": "602.00",
+      "total": "7702.00",
+      "field_confidence": {
+        "supplier_name": 1.0,
+        "invoice_no": 1.0,
+        "invoice_date": 1.0,
+        "po_number": 1.0,
+        "line_items": 1.0,
+        "totals": 1.0
+      }
+    },
+    "fields": {
+      "supplier_name": "Nilgiri Tea Estates Co",
+      "supplier_gstin": "33AADCN9753T1Z1",
+      "invoice_no": "NTE/INV/7017",
+      "invoice_date": "2026-10-14",
+      "po_number": "PO/1",
+      "items": [
+        {
+          "qty": "10",
+          "unit_price_paise": 52000,
+          "tax_rate": "5",
+          "amount_paise": 520000
+        },
+        {
+          "qty": "5",
+          "unit_price_paise": 38000,
+          "tax_rate": "18",
+          "amount_paise": 190000
+        }
+      ],
+      "subtotal_paise": 710000,
+      "gst_paise": {
+        "cgst": 0,
+        "sgst": 0,
+        "igst": 60200
+      },
+      "total_paise": 770200
+    }
+  },
+  "expect": {
+    "decision": "auto_approve",
+    "rule": "all_matched",
+    "status": "posted",
+    "po_number": "PO-1",
+    "correct_amount_paise": 770200,
+    "invoice_total_paise": 770200,
+    "approve": false,
+    "ledger": [
+      {
+        "invoice_no": "NTE/INV/7017",
+        "amount_paise": 770200
+      }
+    ],
+    "po_status": {
+      "PO-1": "fully_billed"
+    }
+  }
+}

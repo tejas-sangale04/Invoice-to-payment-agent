@@ -1,0 +1,16 @@
+# Settings for the evaluation harness (run from the repo root: pytest eval --report).
+
+[tool.pytest.ini_options]
+addopts = "-p no:cacheprovider"
+filterwarnings = ["ignore::DeprecationWarning"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = [".", "../backend"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["app", "tests", "catalog", "harness", "judge", "layouts", "oracle", "report", "scenarios", "scoring"]

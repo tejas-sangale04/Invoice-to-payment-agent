@@ -1,0 +1,169 @@
+{
+  "id": "gst_layouts-07",
+  "kind": "gst_layouts",
+  "split": "dev",
+  "description": "CleanPro Hygiene Solutions: 3 lines, GST 18% as CGST + SGST",
+  "world": {
+    "suppliers": [
+      {
+        "key": "cleanpro",
+        "name": "CleanPro Hygiene Solutions",
+        "email": "ar@cleanpro.example.in",
+        "gstin": "27AAECC2468H1Z6"
+      }
+    ],
+    "purchase_orders": [
+      {
+        "po_number": "PO-1",
+        "supplier": "cleanpro",
+        "items": [
+          {
+            "name": "Floor cleaner",
+            "qty": "10",
+            "unit": "L",
+            "unit_price_paise": 10800,
+            "tax_rate": "18"
+          },
+          {
+            "name": "Garbage bags",
+            "qty": "10",
+            "unit": "pack",
+            "unit_price_paise": 9500,
+            "tax_rate": "18"
+          },
+          {
+            "name": "Hand sanitizer",
+            "qty": "10",
+            "unit": "L",
+            "unit_price_paise": 22000,
+            "tax_rate": "18"
+          }
+        ]
+      }
+    ],
+    "receipts": [
+      {
+        "po_number": "PO-1",
+        "items": [
+          {
+            "line_id": "1",
+            "qty_received": "10"
+          },
+          {
+            "line_id": "2",
+            "qty_received": "10"
+          },
+          {
+            "line_id": "3",
+            "qty_received": "10"
+          }
+        ]
+      }
+    ]
+  },
+  "prior": [],
+  "invoice": {
+    "file": "invoice.jpg",
+    "layout": 3,
+    "messy": "rotate",
+    "same_file_as_prior": false,
+    "reading": {
+      "supplier_name": "CleanPro Hygiene Solutions",
+      "supplier_gstin": "27AAECC2468H1Z6",
+      "invoice_no": "CP-2567",
+      "invoice_date": "2026-10-07",
+      "po_number": "PO-1",
+      "items": [
+        {
+          "name": "Floor cleaner",
+          "qty": "10",
+          "unit": "L",
+          "unit_price": "108.00",
+          "tax_rate": "18",
+          "amount": "1080.00"
+        },
+        {
+          "name": "Garbage bags",
+          "qty": "10",
+          "unit": "pack",
+          "unit_price": "95.00",
+          "tax_rate": "18",
+          "amount": "950.00"
+        },
+        {
+          "name": "Hand sanitizer",
+          "qty": "10",
+          "unit": "L",
+          "unit_price": "220.00",
+          "tax_rate": "18",
+          "amount": "2200.00"
+        }
+      ],
+      "subtotal": "4230.00",
+      "cgst": "380.70",
+      "sgst": "380.70",
+      "igst": null,
+      "total": "4991.40",
+      "field_confidence": {
+        "supplier_name": 1.0,
+        "invoice_no": 1.0,
+        "invoice_date": 1.0,
+        "po_number": 1.0,
+        "line_items": 1.0,
+        "totals": 1.0
+      }
+    },
+    "fields": {
+      "supplier_name": "CleanPro Hygiene Solutions",
+      "supplier_gstin": "27AAECC2468H1Z6",
+      "invoice_no": "CP-2567",
+      "invoice_date": "2026-10-07",
+      "po_number": "PO-1",
+      "items": [
+        {
+          "qty": "10",
+          "unit_price_paise": 10800,
+          "tax_rate": "18",
+          "amount_paise": 108000
+        },
+        {
+          "qty": "10",
+          "unit_price_paise": 9500,
+          "tax_rate": "18",
+          "amount_paise": 95000
+        },
+        {
+          "qty": "10",
+          "unit_price_paise": 22000,
+          "tax_rate": "18",
+          "amount_paise": 220000
+        }
+      ],
+      "subtotal_paise": 423000,
+      "gst_paise": {
+        "cgst": 38070,
+        "sgst": 38070,
+        "igst": 0
+      },
+      "total_paise": 499140
+    }
+  },
+  "expect": {
+    "decision": "auto_approve",
+    "rule": "all_matched",
+    "status": "posted",
+    "po_number": "PO-1",
+    "correct_amount_paise": 499140,
+    "invoice_total_paise": 499140,
+    "approve": false,
+    "ledger": [
+      {
+        "invoice_no": "CP-2567",
+        "amount_paise": 499140
+      }
+    ],
+    "po_status": {
+      "PO-1": "fully_billed"
+    }
+  }
+}

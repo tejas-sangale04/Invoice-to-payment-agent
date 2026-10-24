@@ -87,6 +87,18 @@ To try an approval, make the PO price for milk Rs 59 (the invoice's Rs 60 is wit
 
 With `EXTRACTOR=gemini` the Explanation and Resolution agents use Gemini too (set `EXCEPTION_AGENTS=disabled` to keep them off). Any invoice that isn't auto-approved then shows an explanation and, when the supplier needs to fix something, a draft email to copy. To try the Resolution Agent, upload an invoice with no PO number printed on it: the agent searches that supplier's open POs and, if exactly one fits, the invoice goes to the approval queue marked as matched without a PO number.
 
+## 6. Run the evaluation with Gemini
+
+With the emulators running (Terminal 1) and the venv active, from the repo root:
+
+```bash
+pip install -r eval/requirements.txt
+pytest eval --report --agents gemini --split dev --runs 1    # quick look: 42 invoices
+pytest eval --report --agents gemini                         # the full run: 60 invoices x 3
+```
+
+The report is written to `eval/reports/` (Markdown and JSON). The full run makes several hundred Gemini calls (each invoice is read, exceptions are explained and judged, all three times), so it takes a while; it only reads and writes the emulator, never a real Firestore. See [eval/README.md](../eval/README.md) for what each number means.
+
 ## If something goes wrong
 
 | Error | Fix |

@@ -1,0 +1,188 @@
+{
+  "id": "duplicate-03",
+  "kind": "duplicate",
+  "split": "holdout",
+  "description": "Deccan Bakers & Confectioners: the same file uploaded again",
+  "world": {
+    "suppliers": [
+      {
+        "key": "deccan",
+        "name": "Deccan Bakers & Confectioners",
+        "email": "orders@deccanbakers.example.in",
+        "gstin": "27AAQFD1357B1Z9"
+      }
+    ],
+    "purchase_orders": [
+      {
+        "po_number": "PO-1",
+        "supplier": "deccan",
+        "items": [
+          {
+            "name": "Sourdough loaf",
+            "qty": "20",
+            "unit": "pcs",
+            "unit_price_paise": 12000,
+            "tax_rate": "5"
+          },
+          {
+            "name": "Blueberry muffin",
+            "qty": "60",
+            "unit": "pcs",
+            "unit_price_paise": 4000,
+            "tax_rate": "18"
+          }
+        ]
+      }
+    ],
+    "receipts": [
+      {
+        "po_number": "PO-1",
+        "items": [
+          {
+            "line_id": "1",
+            "qty_received": "20"
+          },
+          {
+            "line_id": "2",
+            "qty_received": "60"
+          }
+        ]
+      }
+    ]
+  },
+  "prior": [
+    {
+      "file": "prior-1.pdf",
+      "invoice_no": "DBC 2666",
+      "reading": {
+        "supplier_name": "Deccan Bakers & Confectioners",
+        "supplier_gstin": "27AAQFD1357B1Z9",
+        "invoice_no": "DBC 2666",
+        "invoice_date": "2026-10-03",
+        "po_number": "PO-1",
+        "items": [
+          {
+            "name": "Sourdough loaf",
+            "qty": "20",
+            "unit": "pcs",
+            "unit_price": "120.00",
+            "tax_rate": "5",
+            "amount": "2400.00"
+          },
+          {
+            "name": "Blueberry muffin",
+            "qty": "60",
+            "unit": "pcs",
+            "unit_price": "40.00",
+            "tax_rate": "18",
+            "amount": "2400.00"
+          }
+        ],
+        "subtotal": "4800.00",
+        "cgst": "276.00",
+        "sgst": "276.00",
+        "igst": null,
+        "total": "5352.00",
+        "field_confidence": {
+          "supplier_name": 1.0,
+          "invoice_no": 1.0,
+          "invoice_date": 1.0,
+          "po_number": 1.0,
+          "line_items": 1.0,
+          "totals": 1.0
+        }
+      },
+      "expect_status": "posted"
+    }
+  ],
+  "invoice": {
+    "file": "invoice.pdf",
+    "layout": 3,
+    "messy": null,
+    "same_file_as_prior": true,
+    "reading": {
+      "supplier_name": "Deccan Bakers & Confectioners",
+      "supplier_gstin": "27AAQFD1357B1Z9",
+      "invoice_no": "DBC 2666",
+      "invoice_date": "2026-10-03",
+      "po_number": "PO-1",
+      "items": [
+        {
+          "name": "Sourdough loaf",
+          "qty": "20",
+          "unit": "pcs",
+          "unit_price": "120.00",
+          "tax_rate": "5",
+          "amount": "2400.00"
+        },
+        {
+          "name": "Blueberry muffin",
+          "qty": "60",
+          "unit": "pcs",
+          "unit_price": "40.00",
+          "tax_rate": "18",
+          "amount": "2400.00"
+        }
+      ],
+      "subtotal": "4800.00",
+      "cgst": "276.00",
+      "sgst": "276.00",
+      "igst": null,
+      "total": "5352.00",
+      "field_confidence": {
+        "supplier_name": 1.0,
+        "invoice_no": 1.0,
+        "invoice_date": 1.0,
+        "po_number": 1.0,
+        "line_items": 1.0,
+        "totals": 1.0
+      }
+    },
+    "fields": {
+      "supplier_name": "Deccan Bakers & Confectioners",
+      "supplier_gstin": "27AAQFD1357B1Z9",
+      "invoice_no": "DBC 2666",
+      "invoice_date": "2026-10-03",
+      "po_number": "PO-1",
+      "items": [
+        {
+          "qty": "20",
+          "unit_price_paise": 12000,
+          "tax_rate": "5",
+          "amount_paise": 240000
+        },
+        {
+          "qty": "60",
+          "unit_price_paise": 4000,
+          "tax_rate": "18",
+          "amount_paise": 240000
+        }
+      ],
+      "subtotal_paise": 480000,
+      "gst_paise": {
+        "cgst": 27600,
+        "sgst": 27600,
+        "igst": 0
+      },
+      "total_paise": 535200
+    }
+  },
+  "expect": {
+    "decision": "block",
+    "rule": "duplicate",
+    "status": "blocked_duplicate",
+    "po_number": "PO-1",
+    "correct_amount_paise": null,
+    "invoice_total_paise": 535200,
+    "approve": false,
+    "ledger": [
+      {
+        "invoice_no": "DBC 2666",
+        "amount_paise": 535200
+      }
+    ],
+    "po_status": {
+      "PO-1": "fully_billed"
+    }
+  }
+}

@@ -1,0 +1,145 @@
+{
+  "id": "no_matching_po-03",
+  "kind": "no_matching_po",
+  "split": "holdout",
+  "description": "Deccan Bakers & Confectioners: quotes PO-1, which is Sharma Dairy's",
+  "world": {
+    "suppliers": [
+      {
+        "key": "sharma",
+        "name": "Sharma Dairy Pvt Ltd",
+        "email": "accounts@sharmadairy.example.in",
+        "gstin": "27AAPCS1234F1Z5"
+      },
+      {
+        "key": "deccan",
+        "name": "Deccan Bakers & Confectioners",
+        "email": "orders@deccanbakers.example.in",
+        "gstin": "27AAQFD1357B1Z9"
+      }
+    ],
+    "purchase_orders": [
+      {
+        "po_number": "PO-1",
+        "supplier": "sharma",
+        "items": [
+          {
+            "name": "Paneer",
+            "qty": "8",
+            "unit": "kg",
+            "unit_price_paise": 40000,
+            "tax_rate": "5"
+          },
+          {
+            "name": "White butter",
+            "qty": "5",
+            "unit": "kg",
+            "unit_price_paise": 52000,
+            "tax_rate": "12"
+          }
+        ]
+      }
+    ],
+    "receipts": [
+      {
+        "po_number": "PO-1",
+        "items": [
+          {
+            "line_id": "1",
+            "qty_received": "8"
+          },
+          {
+            "line_id": "2",
+            "qty_received": "5"
+          }
+        ]
+      }
+    ]
+  },
+  "prior": [],
+  "invoice": {
+    "file": "invoice.pdf",
+    "layout": 4,
+    "messy": null,
+    "same_file_as_prior": false,
+    "reading": {
+      "supplier_name": "Deccan Bakers & Confectioners",
+      "supplier_gstin": "27AAQFD1357B1Z9",
+      "invoice_no": "DBC 2491",
+      "invoice_date": "2026-10-05",
+      "po_number": "PO-1",
+      "items": [
+        {
+          "name": "Croissant (butter)",
+          "qty": "50",
+          "unit": "pcs",
+          "unit_price": "35.00",
+          "tax_rate": "18",
+          "amount": "1,750.00"
+        },
+        {
+          "name": "Sourdough loaf",
+          "qty": "40",
+          "unit": "pcs",
+          "unit_price": "120.00",
+          "tax_rate": "5",
+          "amount": "4,800.00"
+        }
+      ],
+      "subtotal": "6,550.00",
+      "cgst": "277.50",
+      "sgst": "277.50",
+      "igst": null,
+      "total": "7,105.00",
+      "field_confidence": {
+        "supplier_name": 1.0,
+        "invoice_no": 1.0,
+        "invoice_date": 1.0,
+        "po_number": 1.0,
+        "line_items": 1.0,
+        "totals": 1.0
+      }
+    },
+    "fields": {
+      "supplier_name": "Deccan Bakers & Confectioners",
+      "supplier_gstin": "27AAQFD1357B1Z9",
+      "invoice_no": "DBC 2491",
+      "invoice_date": "2026-10-05",
+      "po_number": "PO-1",
+      "items": [
+        {
+          "qty": "50",
+          "unit_price_paise": 3500,
+          "tax_rate": "18",
+          "amount_paise": 175000
+        },
+        {
+          "qty": "40",
+          "unit_price_paise": 12000,
+          "tax_rate": "5",
+          "amount_paise": 480000
+        }
+      ],
+      "subtotal_paise": 655000,
+      "gst_paise": {
+        "cgst": 27750,
+        "sgst": 27750,
+        "igst": 0
+      },
+      "total_paise": 710500
+    }
+  },
+  "expect": {
+    "decision": "needs_review",
+    "rule": "no_matching_po",
+    "status": "needs_review",
+    "po_number": null,
+    "correct_amount_paise": null,
+    "invoice_total_paise": 710500,
+    "approve": false,
+    "ledger": [],
+    "po_status": {
+      "PO-1": "open"
+    }
+  }
+}

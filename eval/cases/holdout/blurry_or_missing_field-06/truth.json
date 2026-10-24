@@ -1,0 +1,144 @@
+{
+  "id": "blurry_or_missing_field-06",
+  "kind": "blurry_or_missing_field",
+  "split": "holdout",
+  "description": "Surat Packaging Industries: a blurry photo, still legible (rotateblur)",
+  "world": {
+    "suppliers": [
+      {
+        "key": "surat",
+        "name": "Surat Packaging Industries",
+        "email": "sales@suratpack.example.in",
+        "gstin": "24AAGFS8765P1Z3"
+      }
+    ],
+    "purchase_orders": [
+      {
+        "po_number": "PO-1",
+        "supplier": "surat",
+        "items": [
+          {
+            "name": "Paper cups 250 ml",
+            "qty": "1000",
+            "unit": "pcs",
+            "unit_price_paise": 240,
+            "tax_rate": "18"
+          },
+          {
+            "name": "Kraft paper bags",
+            "qty": "1000",
+            "unit": "pcs",
+            "unit_price_paise": 450,
+            "tax_rate": "18"
+          }
+        ]
+      }
+    ],
+    "receipts": [
+      {
+        "po_number": "PO-1",
+        "items": [
+          {
+            "line_id": "1",
+            "qty_received": "1000"
+          },
+          {
+            "line_id": "2",
+            "qty_received": "1000"
+          }
+        ]
+      }
+    ]
+  },
+  "prior": [],
+  "invoice": {
+    "file": "invoice.jpg",
+    "layout": 4,
+    "messy": "rotateblur",
+    "same_file_as_prior": false,
+    "reading": {
+      "supplier_name": "Surat Packaging Industries",
+      "supplier_gstin": "24AAGFS8765P1Z3",
+      "invoice_no": "SPI/2026/7825",
+      "invoice_date": "2026-10-21",
+      "po_number": "PO-1",
+      "items": [
+        {
+          "name": "Paper cups 250 ml",
+          "qty": "1000",
+          "unit": "pcs",
+          "unit_price": "2.40",
+          "tax_rate": "18",
+          "amount": "2,400.00"
+        },
+        {
+          "name": "Kraft paper bags",
+          "qty": "1000",
+          "unit": "pcs",
+          "unit_price": "4.50",
+          "tax_rate": "18",
+          "amount": "4,500.00"
+        }
+      ],
+      "subtotal": "6,900.00",
+      "cgst": null,
+      "sgst": null,
+      "igst": "1,242.00",
+      "total": "8,142.00",
+      "field_confidence": {
+        "supplier_name": 1.0,
+        "invoice_no": 1.0,
+        "invoice_date": 1.0,
+        "po_number": 1.0,
+        "line_items": 1.0,
+        "totals": 1.0
+      }
+    },
+    "fields": {
+      "supplier_name": "Surat Packaging Industries",
+      "supplier_gstin": "24AAGFS8765P1Z3",
+      "invoice_no": "SPI/2026/7825",
+      "invoice_date": "2026-10-21",
+      "po_number": "PO-1",
+      "items": [
+        {
+          "qty": "1000",
+          "unit_price_paise": 240,
+          "tax_rate": "18",
+          "amount_paise": 240000
+        },
+        {
+          "qty": "1000",
+          "unit_price_paise": 450,
+          "tax_rate": "18",
+          "amount_paise": 450000
+        }
+      ],
+      "subtotal_paise": 690000,
+      "gst_paise": {
+        "cgst": 0,
+        "sgst": 0,
+        "igst": 124200
+      },
+      "total_paise": 814200
+    }
+  },
+  "expect": {
+    "decision": "auto_approve",
+    "rule": "all_matched",
+    "status": "posted",
+    "po_number": "PO-1",
+    "correct_amount_paise": 814200,
+    "invoice_total_paise": 814200,
+    "approve": false,
+    "ledger": [
+      {
+        "invoice_no": "SPI/2026/7825",
+        "amount_paise": 814200
+      }
+    ],
+    "po_status": {
+      "PO-1": "fully_billed"
+    }
+  }
+}
