@@ -2,8 +2,8 @@
 // make no API calls. Flip a flag to true when its phase lands.
 export const FEATURES = {
   invoices: { live: true, phase: 3 },
-  approvals: { live: false, phase: 6 },
-  ledger: { live: false, phase: 6 },
+  approvals: { live: true, phase: 6 },
+  ledger: { live: true, phase: 6 },
   dashboard: { live: false, phase: 8 },
 } as const
 

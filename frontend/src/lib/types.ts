@@ -23,6 +23,7 @@ export interface POLine {
   unit_price_paise: number
   tax_rate: string
   qty_received: string
+  qty_billed: string
   line_total_paise: number
   tax_paise: number
 }
@@ -165,6 +166,14 @@ export interface Invoice {
   supplier_email_draft: string | null
   uploaded_by: string
   approved_by: string | null
+  approved_by_email: string | null
+  approval_comment: string | null
+  rejected_by: string | null
+  rejected_by_email: string | null
+  rejection_reason: string | null
+  duplicate_of: string | null
+  ledger_key: string | null
+  posted_by: string | null
   processing_attempts: number
   created_at: string
   updated_at: string
@@ -174,7 +183,9 @@ export interface Invoice {
 export interface LedgerEntry {
   idempotency_key: string
   invoice_id: string
+  invoice_no: string
   supplier_id: string
+  supplier_name: string
   amount_paise: number
   po_number: string
   posted_by: string

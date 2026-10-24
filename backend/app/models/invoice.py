@@ -1,8 +1,9 @@
 from datetime import date, datetime
 from decimal import Decimal
 from enum import StrEnum
+from typing import Annotated
 
-from pydantic import BaseModel
+from pydantic import BaseModel, StringConstraints
 
 
 class InvoiceStatus(StrEnum):
@@ -139,6 +140,14 @@ class Invoice(BaseModel):
     supplier_email_draft: str | None = None
     uploaded_by: str
     approved_by: str | None = None
+    approved_by_email: str | None = None
+    approval_comment: str | None = None
+    rejected_by: str | None = None
+    rejected_by_email: str | None = None
+    rejection_reason: str | None = None
+    duplicate_of: str | None = None
+    ledger_key: str | None = None
+    posted_by: str | None = None
     processing_attempts: int = 0
     created_at: datetime
     updated_at: datetime
@@ -153,6 +162,26 @@ class AuditEntry(BaseModel):
     to_status: InvoiceStatus | None = None
     details: str | None = None
     timestamp: datetime
+
+
+class ApproveRequest(BaseModel):
+    comment: Annotated[str | None, StringConstraints(strip_whitespace=True, max_length=1000)] = None
+
+
+class RejectRequest(BaseModel):
+    reason: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=1000)]
+
+
+class LedgerEntry(BaseModel):
+    idempotency_key: str
+    invoice_id: str
+    invoice_no: str
+    supplier_id: str
+    supplier_name: str
+    amount_paise: int
+    po_number: str
+    posted_by: str
+    posted_at: datetime
 
 
 class FileLink(BaseModel):

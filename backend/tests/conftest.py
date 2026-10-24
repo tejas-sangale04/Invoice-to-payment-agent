@@ -11,6 +11,8 @@ from app.main import create_app
 from app.services import firebase
 from app.services.firestore import get_db
 
+pytest_plugins = ["tests.pipeline_env"]  # the api and po1 fixtures
+
 # Fake ID tokens for unit tests: token string -> decoded claims.
 FAKE_TOKENS = {
     "staff-token": {"uid": "u-staff", "email": "staff@example.com", "role": "staff"},

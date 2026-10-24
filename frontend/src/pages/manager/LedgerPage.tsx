@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { Link } from 'react-router-dom'
 
 import { PageHeader } from '@/components/PageHeader'
 import { EmptyState, ErrorState, LoadingState, NotLiveNotice } from '@/components/States'
@@ -38,9 +39,17 @@ export function LedgerPage() {
                 {rows.map((r) => (
                   <TableRow key={r.idempotency_key}>
                     <TableCell>{formatDate(r.posted_at)}</TableCell>
-                    <TableCell>{r.supplier_id}</TableCell>
-                    <TableCell>{r.invoice_id}</TableCell>
-                    <TableCell>{r.po_number}</TableCell>
+                    <TableCell>{r.supplier_name}</TableCell>
+                    <TableCell>
+                      <Link to={`/invoices/${r.invoice_id}`} className="underline underline-offset-4">
+                        {r.invoice_no}
+                      </Link>
+                    </TableCell>
+                    <TableCell>
+                      <Link to={`/purchase-orders/${r.po_number}`} className="underline underline-offset-4">
+                        {r.po_number}
+                      </Link>
+                    </TableCell>
                     <TableCell className="text-right tabular-nums">{formatPaise(r.amount_paise)}</TableCell>
                   </TableRow>
                 ))}

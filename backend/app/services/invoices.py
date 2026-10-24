@@ -7,7 +7,8 @@ from fastapi import HTTPException
 from google.cloud import firestore
 
 from app.models.common import Page
-from app.models.invoice import AuditEntry, Invoice, InvoiceStatus
+from app.models.invoice import AuditEntry, Invoice, InvoiceStatus, LedgerEntry
+from app.models.user import CurrentUser
 from app.pipeline.status import (
     REPROCESSABLE,
     InvalidTransition,
@@ -121,3 +122,72 @@ def reprocess(db: firestore.Client, invoice_id: str, actor: str) -> Invoice:
             f"(this one is {exc.current.value.replace('_', ' ')})",
         ) from exc
     return get_invoice(db, invoice_id)
+
+
+# ------------------------------------------------------------- approvals
+
+
+def _decide_as(db: firestore.Client, invoice_id: str, user: CurrentUser, verb: str) -> None:
+    """Separation of duties: whoever uploaded an invoice can't approve or reject it."""
+    if get_invoice_doc(db, invoice_id)["uploaded_by"] == user.uid:
+        raise HTTPException(
+            status_code=403,
+            detail=f"You uploaded this invoice, so another manager has to {verb} it",
+        )
+
+
+def _not_waiting(exc: InvalidTransition, verb: str) -> HTTPException:
+    return HTTPException(
+        status_code=409,
+        detail=f"Only invoices waiting for approval can be {verb} "
+        f"(this one is {exc.current.value.replace('_', ' ')})",
+    )
+
+
+def approve(db: firestore.Client, invoice_id: str, user: CurrentUser, comment: str | None) -> None:
+    _decide_as(db, invoice_id, user, "approve")
+    try:
+        transition(
+            db,
+            invoice_id,
+            InvoiceStatus.approved,
+            actor=user.uid,
+            action="approved",
+            details=f"Approved by {user.email or user.uid}" + (f": {comment}" if comment else ""),
+            expected_from=InvoiceStatus.pending_approval,
+            updates={
+                "approved_by": user.uid,
+                "approved_by_email": user.email,
+                "approval_comment": comment or None,
+            },
+        )
+    except InvalidTransition as exc:
+        raise _not_waiting(exc, "approved") from exc
+
+
+def reject(db: firestore.Client, invoice_id: str, user: CurrentUser, reason: str) -> Invoice:
+    _decide_as(db, invoice_id, user, "reject")
+    try:
+        transition(
+            db,
+            invoice_id,
+            InvoiceStatus.rejected,
+            actor=user.uid,
+            action="rejected",
+            details=f"Rejected by {user.email or user.uid}: {reason}",
+            expected_from=InvoiceStatus.pending_approval,
+            updates={
+                "rejected_by": user.uid,
+                "rejected_by_email": user.email,
+                "rejection_reason": reason,
+            },
+        )
+    except InvalidTransition as exc:
+        raise _not_waiting(exc, "rejected") from exc
+    return get_invoice(db, invoice_id)
+
+
+def list_ledger(db: firestore.Client, limit: int, cursor: str | None) -> Page[LedgerEntry]:
+    col = db.collection("ledger_entries")
+    docs, next_cursor = paginate(col, col, limit, cursor, order_field="posted_at")
+    return Page(items=[LedgerEntry(**d.to_dict()) for d in docs], next_cursor=next_cursor)

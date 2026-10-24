@@ -15,7 +15,6 @@ In the Google Cloud console for your project:
 ```bash
 git clone https://github.com/tejas-sangale04/Invoice-to-payment-agent.git
 cd Invoice-to-payment-agent
-git checkout claude/project-thread-rs6j62     # until PR #2 is merged into main
 code .
 ```
 
@@ -82,7 +81,9 @@ npm run dev
 
 Open http://localhost:5173, sign in as `staff@invoiceflow.test` / `password123`, go to **Upload invoice** and upload `backend/samples/sample-invoice.pdf`. The invoice page shows the status moving from received to extracting. When Gemini is done it shows what was read, the confidence for each field and the tokens used.
 
-The agent then matches it against the purchase order and decides. To see it auto-approved, first add the supplier "Sharma Dairy Pvt Ltd", create a PO with full cream milk (50 L at Rs 60, 0% GST), paneer (10 kg at Rs 320, 5%) and butter (5 kg at Rs 500, 12%), record a delivery of everything, and make sure the invoice's PO number is that PO (the sample says PO-1). Record less than was billed and it goes on hold instead, with the overcharge worked out.
+The agent then matches it against the purchase order and decides. To see it auto-approved, first add the supplier "Sharma Dairy Pvt Ltd", create a PO with full cream milk (50 L at Rs 60, 0% GST), paneer (10 kg at Rs 320, 5%) and butter (5 kg at Rs 500, 12%), record a delivery of everything, and make sure the invoice's PO number is that PO (the sample says PO-1). It is then posted straight to the **Ledger** and the PO shows the quantities as billed. Record less than was billed and it goes on hold instead, with the overcharge worked out.
+
+To try an approval, make the PO price for milk Rs 59 (the invoice's Rs 60 is within the 2% tolerance), so the invoice goes to the **Approval queue**. Sign in as a manager who didn't upload it, approve it and it appears in the Ledger at the PO price. Whoever uploaded an invoice can't approve or reject it.
 
 ## If something goes wrong
 

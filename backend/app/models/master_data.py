@@ -66,9 +66,10 @@ class PurchaseOrderCreate(BaseModel):
 
 
 class POLineView(POItem):
-    """A PO line together with how much of it has been delivered so far."""
+    """A PO line together with how much of it has been delivered and billed so far."""
 
     qty_received: Decimal = Decimal("0")
+    qty_billed: Decimal = Decimal("0")  # on invoices posted to the ledger
     line_total_paise: int
     tax_paise: int
 

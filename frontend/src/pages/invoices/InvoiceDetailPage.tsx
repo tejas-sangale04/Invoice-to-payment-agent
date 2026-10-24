@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { AlertTriangle, Copy, RotateCcw } from 'lucide-react'
-import { useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
 
 import { PageHeader } from '@/components/PageHeader'
@@ -19,7 +19,7 @@ import type { InvoiceStatus } from '@/lib/types'
 import { cn } from '@/lib/utils'
 
 // While the agent is working the page polls; once it settles, it stops.
-const PROCESSING: InvoiceStatus[] = ['received', 'extracting', 'extracted', 'validated', 'matched']
+const PROCESSING: InvoiceStatus[] = ['received', 'extracting', 'extracted', 'validated', 'matched', 'auto_approved', 'approved']
 const REPROCESSABLE: InvoiceStatus[] = ['on_hold', 'needs_review', 'failed']
 const ATTENTION: InvoiceStatus[] = ['on_hold', 'needs_review', 'failed', 'blocked_duplicate', 'rejected']
 
@@ -140,6 +140,34 @@ export function InvoiceDetailPage() {
                 </div>
               )}
               {!inv.decision && <p className="text-muted-foreground">The agent hasn't decided yet.</p>}
+              {inv.approved_by && (
+                <p>
+                  Approved by {inv.approved_by === user?.uid ? 'you' : (inv.approved_by_email ?? inv.approved_by)}
+                  {inv.approval_comment && `: ${inv.approval_comment}`}
+                </p>
+              )}
+              {inv.rejected_by && (
+                <p>
+                  Rejected by {inv.rejected_by === user?.uid ? 'you' : (inv.rejected_by_email ?? inv.rejected_by)}:{' '}
+                  {inv.rejection_reason}
+                </p>
+              )}
+              {inv.status === 'pending_approval' && hasRole(role, 'manager') && (
+                <p>
+                  <Link to="/approvals" className="underline underline-offset-4">
+                    Approve or reject it in the approval queue
+                  </Link>
+                </p>
+              )}
+              {inv.ledger_key && (
+                <p className="text-green-700">
+                  Posted to the{' '}
+                  <Link to="/ledger" className="underline underline-offset-4">
+                    ledger
+                  </Link>{' '}
+                  for payment.
+                </p>
+              )}
             </CardContent>
           </Card>
 
