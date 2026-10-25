@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
 
 import { useAuth } from '@/auth/AuthProvider'
+import { BrandMark } from '@/components/BrandMark'
 import { NAV } from '@/components/nav'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -28,7 +29,7 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
                 className={({ isActive }) =>
                   cn(
                     'flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors',
-                    isActive ? 'bg-accent font-medium text-accent-foreground' : 'text-muted-foreground hover:bg-accent/60 hover:text-foreground',
+                    isActive ? 'bg-accent font-medium text-brand shadow-[inset_2px_0_0_var(--brand)]' : 'text-muted-foreground hover:bg-accent/60 hover:text-foreground',
                   )
                 }
               >
@@ -61,11 +62,14 @@ export function AppLayout() {
             <Button variant="ghost" size="icon" className="md:hidden" aria-label="Toggle menu" onClick={() => setMenuOpen((o) => !o)}>
               {menuOpen ? <X /> : <Menu />}
             </Button>
-            <Link to="/" className="font-semibold">
-              InvoiceFlow
+            <Link to="/" className="flex items-center gap-2 font-semibold">
+              <BrandMark className="size-7" /> InvoiceFlow
             </Link>
           </div>
           <div className="flex items-center gap-3 text-sm">
+            <span className="flex size-7 items-center justify-center rounded-full bg-brand-soft text-xs font-semibold uppercase text-brand" aria-hidden>
+              {user?.email?.[0] ?? '?'}
+            </span>
             <span className="hidden text-muted-foreground sm:inline">{user?.email}</span>
             <Badge variant="secondary">{role ?? 'no role'}</Badge>
             <Button variant="ghost" size="sm" onClick={onSignOut}>

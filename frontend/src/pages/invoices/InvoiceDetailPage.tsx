@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 
 import { PageHeader } from '@/components/PageHeader'
 import { SupplierEmailEditor } from '@/components/SupplierEmailEditor'
+import { AnalysisProgress } from '@/components/AnalysisProgress'
 import { ErrorState, LoadingState, NotLiveNotice } from '@/components/States'
 import { StatusBadge } from '@/components/StatusBadge'
 import { Button } from '@/components/ui/button'
@@ -155,7 +156,7 @@ export function InvoiceDetailPage() {
       )}
       {PROCESSING.includes(inv.status) && (
         <div className="mb-6">
-          <LoadingState label="The agent is working on this invoice…" />
+          <AnalysisProgress status={inv.status} />
         </div>
       )}
       {reprocess.isError && (

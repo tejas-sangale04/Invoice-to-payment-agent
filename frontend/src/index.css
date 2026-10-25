@@ -3,25 +3,27 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* shadcn/ui theme tokens (neutral). Green, amber and red are reserved for OK, attention and problem. */
+/* shadcn/ui theme tokens (neutral, teal brand). Green, amber and red are reserved for OK, attention and problem. */
 :root {
   --radius: 0.625rem;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
+  --primary: oklch(0.45 0.075 195);
   --primary-foreground: oklch(0.985 0 0);
+  --brand: oklch(0.45 0.075 195);
+  --brand-soft: oklch(0.96 0.025 195);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
   --muted: oklch(0.97 0 0);
   --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  --accent: oklch(0.96 0.02 195);
+  --accent-foreground: oklch(0.3 0.06 195);
   --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --ring: oklch(0.6 0.08 195);
   --success: oklch(0.627 0.17 149);
   --warning: oklch(0.769 0.165 70);
 }
@@ -47,6 +49,8 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --color-brand: var(--brand);
+  --color-brand-soft: var(--brand-soft);
   --color-success: var(--success);
   --color-warning: var(--warning);
 }
