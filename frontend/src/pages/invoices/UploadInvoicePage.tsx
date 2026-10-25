@@ -4,6 +4,7 @@ import { useRef, useState, type DragEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { toast } from 'sonner'
 
+import { AnalysisProgress } from '@/components/AnalysisProgress'
 import { PageHeader } from '@/components/PageHeader'
 import { ErrorState, NotLiveNotice } from '@/components/States'
 import { StatusBadge } from '@/components/StatusBadge'
@@ -41,6 +42,11 @@ function UploadedStatus({ uploaded }: { uploaded: Invoice }) {
         </div>
       </div>
       {inv.status_reason && <p className="text-muted-foreground">{inv.status_reason}</p>}
+      {PROCESSING.includes(inv.status) && (
+        <div className="mt-2">
+          <AnalysisProgress status={inv.status} />
+        </div>
+      )}
     </div>
   )
 }

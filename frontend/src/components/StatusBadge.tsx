@@ -1,7 +1,11 @@
+import { Loader2 } from 'lucide-react'
+
 import { Badge } from '@/components/ui/badge'
 import type { Decision, InvoiceStatus, POStatus } from '@/lib/types'
 
 type Tone = 'success' | 'warning' | 'destructive' | 'secondary'
+
+const WORKING = ['received', 'extracting', 'extracted', 'validated', 'matched']
 
 // Green = OK, amber = needs attention, red = problem. Everything else is neutral.
 const TONES: Record<string, Tone> = {
@@ -26,5 +30,10 @@ const TONES: Record<string, Tone> = {
 }
 
 export function StatusBadge({ status }: { status: InvoiceStatus | Decision | POStatus }) {
-  return <Badge variant={TONES[status] ?? 'secondary'}>{status.replace(/_/g, ' ')}</Badge>
+  return (
+    <Badge variant={TONES[status] ?? 'secondary'}>
+      {WORKING.includes(status) && <Loader2 className="size-3 animate-spin" />}
+      {status.replace(/_/g, ' ')}
+    </Badge>
+  )
 }
